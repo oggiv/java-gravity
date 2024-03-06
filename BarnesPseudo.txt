@@ -1,0 +1,93 @@
+Class Space (tree) {
+    height
+    width
+    
+    tree
+
+    fun create-space(tree) {
+        # normal stuff
+    }
+}
+
+Class Tree (planets) {
+    root-node
+
+    fun create-tree(planets){}
+}
+
+Class Node () {
+    startPoint      # left top corner coordinates
+
+    node1
+    node2
+    node3
+    node4
+
+    center-of-mass
+    total-mass
+
+    fun calculate-center() {
+        for each planet (x, y) in planets {
+            new-x = total(x[i]*m[i]) / total-mass
+            new-y = total(y[i]*m[i]) / total-mass
+        }
+    }
+}
+
+Class Planet () {
+    mass
+
+    # swap for different coordinate pairs
+    bool position
+
+    x1-coordinate
+    y1-coordinate
+
+    x2-coordinate
+    y2-coordinate
+
+    # no race conditions for velocity -> no need to have doubled variables
+    x-velocity
+    y-velocity
+}
+
+Class Worker (time) {
+    for(time){
+        calculate-forces()
+        barrier()
+        move-planets()
+        barrier()  
+    } 
+
+    fun calculate-forces(planet1, planet2){
+        # Math
+    }
+
+    fun move-planets(){
+        # Switcheroo
+        # Should maybe be in space?
+    }
+
+    fun barrier(){ (PERHAPS IMPLEMENTED WITH MONITOR)
+
+    }
+}
+
+
+Main (line input) {
+    
+    gnumBodies 	# the number of bodies
+    numSteps 	# the number of time steps in the simulation
+    far 	    # the distance used to decide when to approximate
+    numWorkers 	# the number of workers
+    file        # the name of the planet input file
+    (graphics)  # a boolean saying if graphics should be used or not (-g) we'll see
+
+    planets = read-planets(file)
+    tree = Tree.create-tree(planets)
+    space = Space.create-space(tree)
+    
+    create-workers()
+    workers-do(something)
+}
+

@@ -1,13 +1,13 @@
-type point = rec(double x, y);
+struct point = rec(double x, y);
 double G = 6.67e-11;
-point p[1:n], v[1:n], f[1:PR,1:n]; # position, velocity,
-double m[1:n]; # force and mass for each body
+point p[1:n], v[1:n], f[1:PR,1:n]; // position, velocity,
+double m[1:n]; // force and mass for each body
 
 initialize the positions, velocities, forces, and masses;
 
-procedure barrier(int w) { # efficient barrier from Section 3.4 }
+procedure barrier(int w) { // efficient barrier from Section 3.4 }
 
-# calculate forces for bodies assigned to worker w
+// calculate forces for bodies assigned to worker w
 procedure calculateForces(int w) {
   double distance, magnitude; point direction;
   for [i = w to n by PR, j = i+1 to n] {
@@ -19,15 +19,16 @@ procedure calculateForces(int w) {
     f[w,j].x = f[w,j].x - magnitude*direction.x/distance;
     f[w,i].y = f[w,i].y + magnitude*direction.y/distance;
     f[w,j].y = f[w,j].y - magnitude*direction.y/distance;
-} }
+  } 
+}
 
-# move the bodies assigned to worker w
+// move the bodies assigned to worker w
 procedure moveBodies(int w) {
   point deltav; # dv=f/m * DT
   point deltap; # dp=(v+dv/2) * DT
   point force = (0.0, 0.0);
   for [i = w to n by PR] {
-    # sum the forces on body i and reset f[*,i]
+    // sum the forces on body i and reset f[*,i]
     for [k = 1 to PR] {
       force.x += f[k,i].x; f[k,i].x = 0.0;
       force.y += f[k,i].y; f[k,i].y = 0.0;
@@ -44,7 +45,7 @@ procedure moveBodies(int w) {
 } }
 
 process Worker[w = 1 to PR] {
-  # run the simulation with time steps of DT
+  // run the simulation with time steps of DT
   for [time = start to finish by DT] {
     calculateForces(w);
     barrier(w);

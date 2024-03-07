@@ -17,6 +17,7 @@ public class Node {
         topLeftY = y;
         this.height = height;
         this.width = width;
+        quadrant = new Node[4];
         for(int i = 0; i < 4; i++){
             quadrant[i] = null;
         }
@@ -30,7 +31,7 @@ public class Node {
         // if a planet "passes through" this node, it's mass should be included in this node's total
         this.mass += planet.mass;
 
-        if(this.hasPlanet() && this.hasChildren()){ // does it have child nodes?
+        if(!this.hasPlanet() && !this.hasChildren()){ // does it have child nodes?
             // no planet in node and no child nodes -> add planet to node
             this.planet = planet;
             return;
@@ -38,7 +39,7 @@ public class Node {
         else{
             // planet already in node -> split node into 4, add planets to the corresponding nodes
 
-            if (this.hasChildren()) {
+            if (!this.hasChildren()) {
                 quadrant[0] = new Node(topLeftX, topLeftY, height/2, width/2);
                 quadrant[1] = new Node(topLeftX + width/2, topLeftY, height/2, width/2);
                 quadrant[2] = new Node(topLeftX + width/2, topLeftY + height/2, height/2, width/2);
@@ -51,10 +52,12 @@ public class Node {
                 if (planet.getY() < (topLeftY + (height / 2))) {
                     // above horizontal line -> quadrant 1
                     quadrant[0].addPlanet(planet);
+                    System.out.println("Sending planet " + planet.id + " to q1");
                 }
                 else {
                     // below horizontal line -> quadrant 4
                     quadrant[3].addPlanet(planet);
+                    System.out.println("Sending planet " + planet.id + " to q4");
                 }
             }
             else {
@@ -62,10 +65,12 @@ public class Node {
                 if (planet.getY() < (topLeftY + (height / 2))) {
                     // above horizontal line -> quadrant 2
                     quadrant[1].addPlanet(planet);
+                    System.out.println("Sending planet " + planet.id + " to q2");
                 }
                 else {
                     // below horizontal line -> quadrant 3
                     quadrant[2].addPlanet(planet);
+                    System.out.println("Sending planet " + planet.id + " to q3");
                 }
             }
 
@@ -75,22 +80,26 @@ public class Node {
                     // left of vertical line -> quadrant 1 or 4
                     if (this.planet.getY() < (topLeftY + (height / 2))) {
                         // above horizontal line -> quadrant 1
-                        quadrant[0].addPlanet(planet);
+                        quadrant[0].addPlanet(this.planet);
+                        System.out.println("Sending planet " + this.planet.id + " to q1");
                     }
                     else {
                         // below horizontal line -> quadrant 4
-                        quadrant[3].addPlanet(planet);
+                        quadrant[3].addPlanet(this.planet);
+                        System.out.println("Sending planet " + this.planet.id + " to q4");
                     }
                 }
                 else {
                     // right of vertical line -> quadrant 2 or 3
                     if (this.planet.getY() < (topLeftY + (height / 2))) {
                         // above horizontal line -> quadrant 2
-                        quadrant[1].addPlanet(planet);
+                        quadrant[1].addPlanet(this.planet);
+                        System.out.println("Sending planet " + this.planet.id + " to q2");
                     }
                     else {
                         // below horizontal line -> quadrant 3
-                        quadrant[2].addPlanet(planet);
+                        quadrant[2].addPlanet(this.planet);
+                        System.out.println("Sending planet " + this.planet.id + " to q3");
                     }
                 }
                 this.planet = null;
@@ -98,7 +107,7 @@ public class Node {
         }
 
         // center stuff
-        if(this.hasChildren()){
+        if(!this.hasChildren()){
             // no children -> center of gravity is the position of your only planet
             centerX = planet.getX();
             centerY = planet.getY();

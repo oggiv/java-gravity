@@ -32,6 +32,7 @@ public class Barnes {
                 while ((line = buff.readLine()) != null) {
                     row = line.split(",");
                     planets[id] = new Planet(id, Double.parseDouble(row[0]), Double.parseDouble(row[1]), Double.parseDouble(row[2]), Double.parseDouble(row[3]), Double.parseDouble(row[4]));
+                    id++;
                 }
             } catch (Exception e) {
                 System.out.println("File " + args[0] + " could not be opened.");

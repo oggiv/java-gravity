@@ -4,44 +4,46 @@ public class Node {
     double height;
     double width;
 
-    Node[] quadrants;
+    Node[] quadrant;
 
     double centerX;
     double centerY;
     double mass;
 
-    public Node(double x, double y, double height, double width){
+    public Node(double x, double y, double height, double width, Planet planet){
         topLeftX = x;
         topLeftY = y;
         this.height = height;
         this.width = width;
         for(int i = 0; i < 4; i++){
-            quadrants[i] = null;
+            quadrant[i] = null;
         }
-        centerX = -1;
-        centerY = -1;
-        mass = -1;
+        centerX = planet.x1;
+        centerY = planet.y1;
+        mass = planet.mass;
     }
 
     public void add(int pos, Node node){
-        quadrants[pos - 1] = node;
+        quadrant[pos - 1] = node;
     } 
 
-    public double[] calculateCenter(){
-        double x = 0;
-        double y = 0;
+    public void calculateCenter(){
         double xTotal = 0;
         double yTotal = 0;
         for(int i = 0; i < 4; i++){
-            
+            if(quadrant[i] == null) continue;
+            xTotal += quadrant[i].centerX * quadrant[i].mass;
+            yTotal += quadrant[i].centerY * quadrant[i].mass;        
         }
-        return null;
+        centerX = xTotal / mass;
+        centerY = yTotal / mass;
     }
 
     public double calculateMass(){
         mass = 0;
         for(int i = 0; i < 4; i++){
-            mass += quadrants[i].mass;
+            if(quadrant[i] == null) continue;
+            mass += quadrant[i].mass;
         }
         return mass;
     }

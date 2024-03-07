@@ -60,7 +60,12 @@ Class Worker (time) {
     } 
 
     fun calculate-forces(planet1, planet2){
-        # Math
+        # Calculates movement of planet1 as effected by planet2, which is the opposite of the movement of planet2 as affected by planet1
+        distance = sqrt(|planet1.x - planet2.x|**2 + |planet1.y - planet2.y|**2)
+        distance-x = 
+        distance-y = 
+        acceleration-x = gravity-constant / distance-x
+        acceleration-y = gravity-constant / distance-y
     }
 
     fun move-planets(){

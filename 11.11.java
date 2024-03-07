@@ -1,4 +1,4 @@
-struct point = rec(double x, y);
+type point = rec(double x, y);
 double G = 6.67e-11;
 point p[1:n], v[1:n], f[1:PR,1:n]; // position, velocity,
 double m[1:n]; // force and mass for each body

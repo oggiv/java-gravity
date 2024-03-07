@@ -39,10 +39,21 @@ public class Barnes {
             }
         }
         //Space space = new Space();
-
+        System.out.println("Planets in the order they were added");
         for (Planet planet : planets) {
             System.out.println(planet.toString());
         }
+
+        int height = 32;
+        int width = 32;
+
+        System.out.println("Height: " + height + ", Width: " + width);
+
+        Tree tree = new Tree(height, width);
+        tree.createTree(planets);
+
+        System.out.println("\nTree");
+        tree.printTree();
     }
 
     private void Worker() {

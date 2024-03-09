@@ -53,7 +53,7 @@ public class Barnes {
         tree.createTree(planets);
 
         System.out.println("\nTree");
-        tree.printTree();
+        tree.printTreeLines();
     }
 
     private void Worker() {

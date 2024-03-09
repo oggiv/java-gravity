@@ -1,8 +1,13 @@
+import java.util.ArrayList;
+
 public class Node {
     double topLeftX;
     double topLeftY;
     double height;
     double width;
+
+    String id;
+    int level;
 
     Node[] quadrant;
 
@@ -12,7 +17,9 @@ public class Node {
     double centerY;
     double mass;
 
-    public Node(double x, double y, double height, double width){
+    public Node(double x, double y, double height, double width, String id, int level){
+        this.id = id;
+        this.level = level;
         topLeftX = x;
         topLeftY = y;
         this.height = height;
@@ -40,10 +47,10 @@ public class Node {
             // planet already in node -> split node into 4, add planets to the corresponding nodes
 
             if (!this.hasChildren()) {
-                quadrant[0] = new Node(topLeftX, topLeftY, height/2, width/2);
-                quadrant[1] = new Node(topLeftX + width/2, topLeftY, height/2, width/2);
-                quadrant[2] = new Node(topLeftX + width/2, topLeftY + height/2, height/2, width/2);
-                quadrant[3] = new Node(topLeftX, topLeftY + height/2, height/2, width/2);
+                quadrant[0] = new Node(topLeftX, topLeftY, height/2, width/2, id + "-0", this.level + 1);
+                quadrant[1] = new Node(topLeftX + width/2, topLeftY, height/2, width/2, id + "-1", this.level + 1);
+                quadrant[2] = new Node(topLeftX + width/2, topLeftY + height/2, height/2, width/2, id + "-2", this.level + 1);
+                quadrant[3] = new Node(topLeftX, topLeftY + height/2, height/2, width/2, id + "-3", this.level + 1);
             }
             
             // Figure out which quadrant a new planet goes to and put it there
@@ -136,4 +143,5 @@ public class Node {
     public boolean hasChildren(){
         return this.quadrant[0] != null;
     }
+
 }

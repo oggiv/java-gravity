@@ -10,7 +10,7 @@ public class Planet {
 
     public String toString() {
         // pretty string formatter
-        return String.format("Planet id:%d mass:%.2f position1:(%.2f,%.2f) position2:(%.2f,%.2f) velocity:(%.2f,%.2f)", this.id, this.mass, this.x1, this.y1, this.x2, this.y2, this.xVel, this.yVel);
+        return String.format("Pl-id:%d mass:%.2f p1:(%.2f,%.2f) p2:(%.2f,%.2f) vel:(%.2f,%.2f)", this.id, this.mass, this.x1, this.y1, this.x2, this.y2, this.xVel, this.yVel);
     }
 
     public double getX() {

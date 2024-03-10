@@ -49,9 +49,9 @@ public class Tree {
         Node current;
         while (queue.peekFirst() != null) {
             current = queue.pollFirst();
-            //System.out.print("╠");
+            System.out.print("╠");
             //System.out.print("mass: " + current.mass + "\t╠");
-            System.out.print("center: " + current.centerX + ":" + current.centerY + "\t\t╠");
+            //System.out.print("center: " + current.centerX + ":" + current.centerY + "\t\t╠");
             for(int i = 0; i < current.level; i++){
                 System.out.print("═══");
             }

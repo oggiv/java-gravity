@@ -1,5 +1,4 @@
 // Barnes.java
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.concurrent.*;
@@ -15,10 +14,10 @@ public class Barnes {
                 mass,positionX,positionY,velocityX,velocityY
         */
 
-        int gNumBodies = 4;
+        int gNumBodies = 1;
         int numWorkers = 1;
         double far = 100;
-        int numSteps = 1000;
+        int numSteps = 10;
 
         int amountOfPlanets = 0;
         Planet[] planets = new Planet[0];
@@ -28,6 +27,7 @@ public class Barnes {
                 // read the amount of planets
                 String line = buff.readLine(); // does it remove the new line sign?
                 amountOfPlanets = Integer.parseInt(line);
+                gNumBodies = amountOfPlanets;
 
                 // allocate array for planets
                 planets = new Planet[amountOfPlanets];
@@ -71,7 +71,7 @@ public class Barnes {
         for (int i = 0; i < numWorkers; i++) {
             start = i * stripSize;
             end = (i == numWorkers - 1) ? (gNumBodies - 1) : (start + stripSize - 1); // edge case. Giving the last worker extra work if the division is uneven
-            workers[i] = new Worker(i, barrier, tree, planets, start, end, far);
+            workers[i] = new Worker(i, barrier, tree, planets, start, end, far, numSteps);
             workers[i].start();
         }
 
@@ -98,10 +98,11 @@ public class Barnes {
         int startPlanetIndex;
         int endPlanetIndex;
         double far;
+        int steps;
         private final double gforce = 6.67 * Math.pow(10, -11);
         private final double secondsPerFrame = 1;
         
-        public Worker(int id, CyclicBarrier barrier, Tree tree, Planet[] planets, int startPlanetIndex, int endPlanetIndex, double far) {
+        public Worker(int id, CyclicBarrier barrier, Tree tree, Planet[] planets, int startPlanetIndex, int endPlanetIndex, double far, int steps) {
             this.id = id;
             this.barrier = barrier;
             this.tree = tree;
@@ -109,6 +110,7 @@ public class Barnes {
             this.startPlanetIndex = startPlanetIndex;
             this.endPlanetIndex = endPlanetIndex;
             this.far = far;
+            this.steps = steps;
         }
 
         // Arguments:
@@ -137,16 +139,25 @@ public class Barnes {
                     distance = (current_velocity * time) + total_acceleration * (time^2) / 2
             */
 
-            planet.ax += gforce * node.mass / ((planet.getX() - node.centerX)*(planet.getX() - node.centerX));
-            planet.ay += gforce * node.mass / ((planet.getY() - node.centerY)*(planet.getY() - node.centerY));
+            double deltaX = node.centerX - planet.getX();
+            double deltaY = node.centerY - planet.getY();
+            
+            planet.ax += deltaX == 0 ? 0 : gforce * node.mass / (deltaX*deltaX);
+            planet.ay += deltaY == 0 ? 0 : gforce * node.mass / (deltaY*deltaY);
 
+            if (deltaX < 0) {
+                planet.ax = -planet.ax;
+            }
+            if (deltaY < 0) {
+                planet.ay = -planet.ay;
+            }
         }
 
         private void traverseTree(Planet planet, Node node) {
             double distance;
 
             if (!node.hasChildren()) {
-                if (node.planet.id != planet.id) {
+                if (!node.hasPlanet() || node.planet.id == planet.id) {
                     return;
                 }
 
@@ -158,11 +169,26 @@ public class Barnes {
                 double distanceX = (planet.xVel * secondsPerFrame) + planet.ax * secondsPerFrame*secondsPerFrame / 2;
                 double distanceY = (planet.yVel * secondsPerFrame) + planet.ay * secondsPerFrame*secondsPerFrame / 2;
 
-                double newX = planet.getX() + 1;//planet.getX() + distanceX;
-                double newY = planet.getY() + 1;//planet.getY() + distanceY;
+                // System.out.println("What is distX: " + distanceX);
+                // System.out.println("What is distY: " + distanceY);
+                double newX = planet.getX() + distanceX; //planet.getX() + 1;
+                double newY = planet.getY() + distanceY; //planet.getY() + 1;
 
-                planet.setX(tree.width < newX ? (tree.width - 1) : newX);
-                planet.setY(tree.height < newY ? (tree.height - 1) : newY);
+                if (newX < 0) {
+                    newX = 0;
+                }
+                else if (tree.width - 1 <= newX) {
+                    newX = tree.width - 1;
+                }
+                if (newY < 0) {
+                    newY = 0;
+                }
+                else if (tree.height - 1 <= newY) {
+                    newY = tree.height - 1;
+                }
+
+                planet.setX(newX);
+                planet.setY(newY);
             }
             else {
                 // calculate distance from planet to node's center of mass
@@ -184,57 +210,60 @@ public class Barnes {
         
         public void run() {
 
-            // Calculate force
-            // for each of the worker's planets
-            //  calculate next position of the planet
-            for(int i = startPlanetIndex; i <= endPlanetIndex; i++){
-                traverseTree(planets[i], tree.root);
-            }
-        
-            // await other workers to finish their calculations
-            try{
-                barrier.await();
-            } catch(InterruptedException ex) {
-                System.out.println("Interrupted exception barrier.");
-                return;
-            } catch(BrokenBarrierException ex) {
-                System.out.println("Broken barrier exception.");
-                return;
-            }
-        
-            // move planets
-            // for each of the worker's planets
-            //  call planet.update()
-            //  (also draw on screen)
-            for(int i = startPlanetIndex; i <= endPlanetIndex; i++){
-                planets[i].updateCoordinates();
-            }
-            
-        
-            // wait for all planets to update
-            try{
-                barrier.await();
-            } catch(InterruptedException ex) {
-                System.out.println("Interrupted exception barrier.");
-                return;
-            } catch(BrokenBarrierException ex) {
-                System.out.println("Broken barrier exception.");
-                return;
-            }
+            for(int j = 0; j < steps; j++){
 
-            // First worker will rebuid the tree and other will wait for it to finish
-            if(id == 0){
-                tree.createTree(planets);
-            }
-
-            try{
+                // Calculate force
+                // for each of the worker's planets
+                //  calculate next position of the planet
+                for(int i = startPlanetIndex; i <= endPlanetIndex; i++){
+                    traverseTree(planets[i], tree.root);
+                }
+                
+                // await other workers to finish their calculations
+                try{
+                    barrier.await();
+                } catch(InterruptedException ex) {
+                    System.out.println("Interrupted exception barrier.");
+                    return;
+                } catch(BrokenBarrierException ex) {
+                    System.out.println("Broken barrier exception.");
+                    return;
+                }
+                
+                // move planets
+                // for each of the worker's planets
+                //  call planet.update()
+                //  (also draw on screen)
+                for(int i = startPlanetIndex; i <= endPlanetIndex; i++){
+                    planets[i].updateCoordinates();
+                }
+                
+                
+                // wait for all planets to update
+                try{
                 barrier.await();
-            } catch(InterruptedException ex) {
-                System.out.println("Interrupted exception barrier.");
-                return;
-            } catch(BrokenBarrierException ex) {
-                System.out.println("Broken barrier exception.");
-                return;
+                } catch(InterruptedException ex) {
+                    System.out.println("Interrupted exception barrier.");
+                    return;
+                } catch(BrokenBarrierException ex) {
+                    System.out.println("Broken barrier exception.");
+                    return;
+                }
+                
+                // First worker will rebuid the tree and other will wait for it to finish
+                if(id == 0){
+                    tree.createTree(planets);
+                }
+                
+                try{
+                    barrier.await();
+                } catch(InterruptedException ex) {
+                    System.out.println("Interrupted exception barrier.");
+                    return;
+                } catch(BrokenBarrierException ex) {
+                    System.out.println("Broken barrier exception.");
+                    return;
+                }
             }
         }
     }

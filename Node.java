@@ -16,6 +16,8 @@ public class Node {
     double centerX;
     double centerY;
     double mass;
+    double xcomp;
+    double ycomp;
 
     public Node(double x, double y, double height, double width, String id, int level){
         this.id = id;
@@ -31,17 +33,22 @@ public class Node {
         centerX = -1;
         centerY = -1;
         mass = 0;
+        planet = null;
+        xcomp = 0;
+        ycomp = 0;
     }
 
     public void addPlanet(Planet planet){ // add(Planet newPlanet)
 
         // if a planet "passes through" this node, it's mass should be included in this node's total
         this.mass += planet.mass;
+        this.xcomp += planet.mass * planet.getX();
+        this.ycomp += planet.mass * planet.getY();
 
         if(!this.hasPlanet() && !this.hasChildren()){ // does it have child nodes?
             // no planet in node and no child nodes -> add planet to node
             this.planet = planet;
-            return;
+            System.out.printf(this.planet.toString());
         }
         else{
             // planet already in node -> split node into 4, add planets to the corresponding nodes
@@ -54,87 +61,45 @@ public class Node {
             }
             
             // Figure out which quadrant a new planet goes to and put it there
-            if (planet.getX() < (topLeftX + (width / 2))) {
-                // left of vertical line -> quadrant 1 or 4
-                if (planet.getY() < (topLeftY + (height / 2))) {
-                    // above horizontal line -> quadrant 1
-                    quadrant[0].addPlanet(planet);
-                    System.out.println("Sending planet " + planet.id + " to q1");
-                }
-                else {
-                    // below horizontal line -> quadrant 4
-                    quadrant[3].addPlanet(planet);
-                    System.out.println("Sending planet " + planet.id + " to q4");
-                }
-            }
-            else {
-                // right of vertical line -> quadrant 2 or 3
-                if (planet.getY() < (topLeftY + (height / 2))) {
-                    // above horizontal line -> quadrant 2
-                    quadrant[1].addPlanet(planet);
-                    System.out.println("Sending planet " + planet.id + " to q2");
-                }
-                else {
-                    // below horizontal line -> quadrant 3
-                    quadrant[2].addPlanet(planet);
-                    System.out.println("Sending planet " + planet.id + " to q3");
-                }
-            }
+            sendPlanet(planet);
 
             // If there is a planet in this node already, send it to the children
             if(this.hasPlanet()){
-                if (this.planet.getX() < (topLeftX + (width / 2))) {
-                    // left of vertical line -> quadrant 1 or 4
-                    if (this.planet.getY() < (topLeftY + (height / 2))) {
-                        // above horizontal line -> quadrant 1
-                        quadrant[0].addPlanet(this.planet);
-                        System.out.println("Sending planet " + this.planet.id + " to q1");
-                    }
-                    else {
-                        // below horizontal line -> quadrant 4
-                        quadrant[3].addPlanet(this.planet);
-                        System.out.println("Sending planet " + this.planet.id + " to q4");
-                    }
-                }
-                else {
-                    // right of vertical line -> quadrant 2 or 3
-                    if (this.planet.getY() < (topLeftY + (height / 2))) {
-                        // above horizontal line -> quadrant 2
-                        quadrant[1].addPlanet(this.planet);
-                        System.out.println("Sending planet " + this.planet.id + " to q2");
-                    }
-                    else {
-                        // below horizontal line -> quadrant 3
-                        quadrant[2].addPlanet(this.planet);
-                        System.out.println("Sending planet " + this.planet.id + " to q3");
-                    }
-                }
+                sendPlanet(this.planet);
                 this.planet = null;
             }
         }
 
         // center stuff
-        if(!this.hasChildren()){
+        /* 
+        System.out.println(" hasPlanet: " + this.hasPlanet());
+        if(this.hasPlanet()){
             // no children -> center of gravity is the position of your only planet
-            centerX = planet.getX();
-            centerY = planet.getY();
+            centerX = this.planet.getX();
+            centerY = this.planet.getY();
+            System.out.println("One planet center of " + id + ": " + centerX + ":" + centerY);
         }
         else{
             this.calculateCenter();
+            //System.out.println("Calculated center of " + id + ": " + centerX + ":" + centerY);
         }
+
+        */
+
+        this.centerX = this.xcomp / this.mass;
+        this.centerY = this.ycomp / this.mass;
     } 
 
-    private void calculateCenter(){
+    /*private void calculateCenter(){
         double xTotal = 0;
         double yTotal = 0;
         for(int i = 0; i < 4; i++){
-            if(quadrant[i].hasPlanet()) continue;
             xTotal += quadrant[i].centerX * quadrant[i].mass;
             yTotal += quadrant[i].centerY * quadrant[i].mass;        
         }
         this.centerX = xTotal / mass;
         this.centerY = yTotal / mass;
-    }
+    }*/
 
     public boolean hasPlanet(){
         return this.planet != null;
@@ -144,4 +109,36 @@ public class Node {
         return this.quadrant[0] != null;
     }
 
+    public void sendPlanet(Planet planet){
+        if (planet.getX() < (topLeftX + (width / 2))) {
+            // left of vertical line -> quadrant 1 or 4
+            if (planet.getY() < (topLeftY + (height / 2))) {
+                // above horizontal line -> quadrant 1
+                quadrant[0].addPlanet(planet);
+                //System.out.println("Sending planet " + planet.id + " to q1");
+            }
+            else if(planet.getY() < (topLeftY + height)){
+                // below horizontal line -> quadrant 4
+                quadrant[3].addPlanet(planet);
+                //System.out.println("Sending planet " + planet.id + " to q4");
+            }
+            return;
+        }
+        else if(planet.getX() < topLeftX + width){
+            // right of vertical line -> quadrant 2 or 3
+            if (planet.getY() < (topLeftY + (height / 2))) {
+                // above horizontal line -> quadrant 2
+                quadrant[1].addPlanet(planet);
+                //System.out.println("Sending planet " + planet.id + " to q2");
+            }
+            else if(planet.getY() < (topLeftY + height)){
+                // below horizontal line -> quadrant 3
+                quadrant[2].addPlanet(planet);
+                //System.out.println("Sending planet " + planet.id + " to q3");
+            }
+            return;
+        }
+
+        System.err.println("Can't send planet. Something is weird with it. " + planet.toString());
+    }
 }

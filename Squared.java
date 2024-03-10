@@ -4,7 +4,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.concurrent.*;
 
-public class Barnes {
+public class Squared {
+
 
     public static void main(String[] args) {
 
@@ -17,8 +18,6 @@ public class Barnes {
 
         int gNumBodies = 4;
         int numWorkers = 1;
-        double far = 100;
-        int numSteps = 1000;
 
         int amountOfPlanets = 0;
         Planet[] planets = new Planet[0];
@@ -62,6 +61,7 @@ public class Barnes {
         tree.prettyPrint();
 
         CyclicBarrier barrier = new CyclicBarrier(numWorkers);
+        //BagOfPlanets bag = new BagOfPlanets(gNumBodies);
         int stripSize = (gNumBodies % numWorkers == 0) ? (gNumBodies / numWorkers) : ((gNumBodies / numWorkers) + 1);
         int start;
         int end;
@@ -71,44 +71,31 @@ public class Barnes {
         for (int i = 0; i < numWorkers; i++) {
             start = i * stripSize;
             end = (i == numWorkers - 1) ? (gNumBodies - 1) : (start + stripSize - 1); // edge case. Giving the last worker extra work if the division is uneven
-            workers[i] = new Worker(i, barrier, tree, planets, start, end, far);
+            workers[i] = new Worker(barrier, tree, planets, start, end);
             workers[i].start();
         }
 
-        // Wait for workers to complete their 
         for (int i = 0; i < numWorkers; i++) {
-            try{
-                workers[i].join();
-            } catch (InterruptedException ex){
-                System.out.println("JOIN INTERRUPTED");
-                return;
-            }
+            workers[i].join();
         }
-
-        tree.prettyPrint();
 
     }
     
     private static class Worker extends Thread {
         
-        int id;
         CyclicBarrier barrier;
         Tree tree;
         Planet[] planets;
         int startPlanetIndex;
         int endPlanetIndex;
-        double far;
         private final double gforce = 6.67 * Math.pow(10, -11);
         private final double secondsPerFrame = 1;
         
-        public Worker(int id, CyclicBarrier barrier, Tree tree, Planet[] planets, int startPlanetIndex, int endPlanetIndex, double far) {
-            this.id = id;
+        public Worker(CyclicBarrier barrier, Tree tree, Planet[] planets, int startPlanetIndex, int endPlanetIndex) {
             this.barrier = barrier;
-            this.tree = tree;
             this.planets = planets;
             this.startPlanetIndex = startPlanetIndex;
             this.endPlanetIndex = endPlanetIndex;
-            this.far = far;
         }
 
         // Arguments:
@@ -120,64 +107,46 @@ public class Barnes {
         // wait at barrier (needs barrier)
 
         // function(planet)
-        private void calculateForce(Planet planet, Node node){
-            // calculateForce takes a planet and a node,
-            // calculates the force that the planet will feel from the node,
-            // calculates the acceleration created by that force,
-            // and adds this acceleration to a sum of accelerations that the planet feels
+        private void calculateForce(int index){
+            Planet pl = planets[index];
+            double distance, magnitude, xDir, yDir;
 
-            /* Formulas
-                Newton's first law
-                    F = mass * acceleration
-                Gravitational force
-                    F = G * (mass1 * mass2) / distance^2
-                (Gravitational acceleration)
-                    a = F / mass1 = G * mass2 / distance^2
-                Distance moved
-                    distance = (current_velocity * time) + total_acceleration * (time^2) / 2
-            */
+            
+            for(int i = 0; i < planets.length; i++){
+                if(i == index) continue;
 
-            planet.ax += gforce * node.mass / ((planet.getX() - node.centerX)*(planet.getX() - node.centerX));
-            planet.ay += gforce * node.mass / ((planet.getY() - node.centerY)*(planet.getY() - node.centerY));
+                distance = Math.sqrt(Math.pow((pl.getX() - planets[i].getX()), 2) + Math.pow((pl.getY() - planets[i].getY()), 2));
+                magnitude = (gforce*pl.mass*planets[i].mass) / Math.pow(distance, 2);
 
-        }
-
-        private void traverseTree(Planet planet, Node node) {
-            double distance;
-
-            if (!node.hasChildren()) {
-                if (node.planet.id != planet.id) {
-                    return;
-                }
-
-                // Calculate the sum of accelerations acting on the planet
-                calculateForce(planet, node);
-
-                // Calculate where the planet 
-                // distance = (current_velocity * time) + total_acceleration * (time^2) / 2
-                double distanceX = (planet.xVel * secondsPerFrame) + planet.ax * secondsPerFrame*secondsPerFrame / 2;
-                double distanceY = (planet.yVel * secondsPerFrame) + planet.ay * secondsPerFrame*secondsPerFrame / 2;
-
-                double newX = planet.getX() + 1;//planet.getX() + distanceX;
-                double newY = planet.getY() + 1;//planet.getY() + distanceY;
-
-                planet.setX(tree.width < newX ? (tree.width - 1) : newX);
-                planet.setY(tree.height < newY ? (tree.height - 1) : newY);
-            }
-            else {
-                // calculate distance from planet to node's center of mass
-                distance = Math.sqrt(Math.pow(planet.getX() - node.centerX, 2) + Math.pow(planet.getY() - node.centerY, 2));
+                xDir = planets[i].getX() - pl.getX();
+                yDir = planets[i].getY() - pl.getY();
                 
-                if (far < distance) {
-                    // Approximate the force using this node
-                    calculateForce(planet, node);
-                }
-                else {
-                    // Continue down the tree
-                    for(int i = 0; i < 4; i++){
-                        traverseTree(planet, node.quadrant[i]);
-                    }
-                }
+                pl.setX(magnitude*xDir/distance + pl.getX());
+                pl.setY(magnitude*yDir/distance + pl.getY());                
+
+
+                // Planets p1 and p2
+                // F = G * (p1.mass * p2.mass) / (distance)^2
+                // Fx = G * (p1.mass * p2.mass) / distanceX^2
+                // Fy = G * (p1.mass * p2.mass) / distanceY^2
+                // p1.ax = Fx / p1.mass = G * p2.mass / distanceX^2
+                // p1.x = p1.x + (p1.velocityX * time + p1.ax * (time^2) / 2)
+                // and so on...
+
+                // p1.x = p1.x + time * (p1.velocityX + gforce * p2.mass / abs)
+
+                /*
+
+                // Given Planet objects planet1 and planet2
+
+                // Calculate distances in X and Y
+                distanceX2 = (planet1.x - planet2.x) * (planet1.x - planet2.x);
+                distanceY2 = (planet1.y - planet2.y) * (planet1.y - planet2.y);
+
+                // Calculate accelleration in X and Y
+                accelerationX = 
+                */
+
             }
 
         }
@@ -188,7 +157,7 @@ public class Barnes {
             // for each of the worker's planets
             //  calculate next position of the planet
             for(int i = startPlanetIndex; i <= endPlanetIndex; i++){
-                traverseTree(planets[i], tree.root);
+                calculateForce(i);
             }
         
             // await other workers to finish their calculations
@@ -206,27 +175,8 @@ public class Barnes {
             // for each of the worker's planets
             //  call planet.update()
             //  (also draw on screen)
-            for(int i = startPlanetIndex; i <= endPlanetIndex; i++){
-                planets[i].updateCoordinates();
-            }
-            
         
             // wait for all planets to update
-            try{
-                barrier.await();
-            } catch(InterruptedException ex) {
-                System.out.println("Interrupted exception barrier.");
-                return;
-            } catch(BrokenBarrierException ex) {
-                System.out.println("Broken barrier exception.");
-                return;
-            }
-
-            // First worker will rebuid the tree and other will wait for it to finish
-            if(id == 0){
-                tree.createTree(planets);
-            }
-
             try{
                 barrier.await();
             } catch(InterruptedException ex) {

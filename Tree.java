@@ -3,12 +3,17 @@ import java.util.Deque;
 
 public class Tree {
     Node root;
+    double height;
+    double width;
 
     public Tree(double height, double width) {
-        this.root = new Node(0, 0, height, width, "0", 0);
+        this.height = height;
+        this.width = width;
+        this.root = null;
     }
 
     public void createTree(Planet[] planets){
+        this.root = new Node(0, 0, height, width, "0", 0);
         for(Planet pl : planets){
             this.root.addPlanet(pl);
         }
@@ -37,14 +42,16 @@ public class Tree {
         }
     }
 
-    public void printTreeLines(){
+    public void prettyPrint(){
         Deque<Node> queue = new ArrayDeque<>();
         queue.addLast(this.root);
 
         Node current;
         while (queue.peekFirst() != null) {
             current = queue.pollFirst();
-            System.out.print("╠");
+            //System.out.print("╠");
+            //System.out.print("mass: " + current.mass + "\t╠");
+            System.out.print("center: " + current.centerX + ":" + current.centerY + "\t\t╠");
             for(int i = 0; i < current.level; i++){
                 System.out.print("═══");
             }

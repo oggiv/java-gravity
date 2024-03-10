@@ -6,6 +6,8 @@ public class Planet {
     double x1, y1;
     double x2, y2;
 
+    double ax, ay;
+
     double xVel, yVel;
 
     public String toString() {
@@ -51,6 +53,8 @@ public class Planet {
 
     public void updateCoordinates() {
         // switch to new values for getX/Y and setX/Y
+        this.ax = 0;
+        this.ay = 0;
         this.phase = !this.phase;
     }
 
@@ -60,6 +64,8 @@ public class Planet {
         this.phase = true;
         this.x1 = x1;
         this.y1 = y1;
+        this.ax = 0;
+        this.ay = 0;
         this.xVel = xVel;
         this.yVel = yVel;
     }

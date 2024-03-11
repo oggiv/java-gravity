@@ -16,63 +16,37 @@ public class Barnes {
             Following lines should be planets of the format:
                 mass,positionX,positionY,velocityX,velocityY
         */
+        String file = args.length > 0 ? args[0] : "testPlanets.csv";
 
         int gNumBodies = 1;
         int numWorkers = 1;
         double far = 100;
-        int numSteps = 10;
-
+        int numSteps = 300;
         int amountOfPlanets = 0;
         Planet[] planets = new Planet[0];
 
-    
-        if (0 < args.length) {
-            System.out.println("ARGS YES");
-            try (BufferedReader buff = new BufferedReader(new FileReader(args[0]))) {
-                // read the amount of planets
-                String line = buff.readLine(); // does it remove the new line sign?
-                amountOfPlanets = Integer.parseInt(line);
-                gNumBodies = amountOfPlanets;
 
-                // allocate array for planets
-                planets = new Planet[amountOfPlanets];
+        try (BufferedReader buff = new BufferedReader(new FileReader(file))) {
+            // read the amount of planets
+            String line = buff.readLine(); // does it remove the new line sign?
+            amountOfPlanets = Integer.parseInt(line);
+            gNumBodies = amountOfPlanets;
 
-                // read and create planets
-                int id = 0;
-                String[] row;
-                while ((line = buff.readLine()) != null) {
-                    row = line.split(",");
-                    planets[id] = new Planet(id, Double.parseDouble(row[0]), Double.parseDouble(row[1]), Double.parseDouble(row[2]), Double.parseDouble(row[3]), Double.parseDouble(row[4]), Double.parseDouble(row[5]));
-                    id++;
-                }
-            } catch (Exception e) {
-                //System.out.println("File " + args[0] + " could not be opened.");
+            // allocate array for planets
+            planets = new Planet[amountOfPlanets];
+
+            // read and create planets
+            int id = 0;
+            String[] row;
+            while ((line = buff.readLine()) != null) {
+                row = line.split(",");
+                planets[id] = new Planet(id, Double.parseDouble(row[0]), Double.parseDouble(row[1]), Double.parseDouble(row[2]), Double.parseDouble(row[3]), Double.parseDouble(row[4]), Double.parseDouble(row[5]));
+                id++;
             }
+        } catch (Exception e) {
+            //System.out.println("File " + args[0] + " could not be opened.");
         }
-        else{
-            System.out.println("ARGS NO");
-            try (BufferedReader buff = new BufferedReader(new FileReader("testPlanets.csv"))) {
-                // read the amount of planets
-                String line = buff.readLine(); // does it remove the new line sign?
-                amountOfPlanets = Integer.parseInt(line);
-                System.out.println("AMOUNT OF PLANETS: " + amountOfPlanets);
-                gNumBodies = amountOfPlanets;
 
-                // allocate array for planets
-                planets = new Planet[amountOfPlanets];
-
-                // read and create planets
-                int id = 0;
-                String[] row;
-                while ((line = buff.readLine()) != null) {
-                    row = line.split(",");
-                    planets[id] = new Planet(id, Double.parseDouble(row[0]), Double.parseDouble(row[1]), Double.parseDouble(row[2]), Double.parseDouble(row[3]), Double.parseDouble(row[4]), Double.parseDouble(row[5]));
-                    id++;
-                }
-            } catch (Exception e) {
-                System.out.println("File could not be opened.");
-            }
-        }
             
         //Space space = new Space();
         System.out.println("Planets in the order they were added");
@@ -212,6 +186,9 @@ public class Barnes {
             planet.ax += accelerationX;
             planet.ay += accelerationY;
         }
+        private void calcNewCoord(Planet planet){
+            
+        }
 
         private void traverseTree(Planet planet, Node node) {
             double distance;
@@ -223,39 +200,22 @@ public class Barnes {
 
                 // Calculate the sum of accelerations acting on the planet
                 calculateForce(planet, node);
-
-                // Calculate how far the planet will move based on current velocity and acceleration
-                //  distance = (current_velocity * time) + total_acceleration * (time^2) / 2
-                double distanceX = (planet.xVel * secondsPerFrame) + planet.ax * secondsPerFrame*secondsPerFrame / 2;
-                double distanceY = (planet.yVel * secondsPerFrame) + planet.ay * secondsPerFrame*secondsPerFrame / 2;
-
-                // Calculate new velocity
-                //  v = v0 + a * t
-                planet.xVel += planet.ax * secondsPerFrame;
-                planet.yVel += planet.ay * secondsPerFrame;
-
-                // System.out.println("What is distX: " + distanceX);
-                // System.out.println("What is distY: " + distanceY);
-                double newX = planet.getX() + distanceX; //planet.getX() + 1;
-                double newY = planet.getY() + distanceY; //planet.getY() + 1;
-
-                System.out.println("New X for planet " + planet.id + " is: " + distanceX);
-
-                if (newX < 0) {
-                    newX = 0;
+            }
+            else {
+                // calculate distance from planet to node's center of mass
+                distance = Math.sqrt(Math.pow(planet.getX() - node.centerX, 2) + Math.pow(planet.getY() - node.centerY, 2));
+                
+                if (far < distance) {
+                    // Approximate the force using this node
+                    calculateForce(planet, node);
                 }
-                else if (tree.width - 1 <= newX) {
-                    newX = tree.width - 1;
+                else {
+                    // Continue down the tree
+                    for(int i = 0; i < 4; i++){
+                        traverseTree(planet, node.quadrant[i]);
+                    }
                 }
-                if (newY < 0) {
-                    newY = 0;
-                }
-                else if (tree.height - 1 <= newY) {
-                    newY = tree.height - 1;
-                }
-
-                planet.setX(newX);
-                planet.setY(newY);
+            }
         }
         
         public void run() {
@@ -267,7 +227,41 @@ public class Barnes {
                 //  calculate next position of the planet
                 for(int i = startPlanetIndex; i <= endPlanetIndex; i++){
                     traverseTree(planets[i], tree.root);
+                    
+                    // Calculate how far the planet will move based on current velocity and acceleration
+                    //  distance = (current_velocity * time) + total_acceleration * (time^2) / 2
+                    double distanceX = (planets[i].xVel * secondsPerFrame) + planets[i].ax * secondsPerFrame*secondsPerFrame / 2;
+                    double distanceY = (planets[i].yVel * secondsPerFrame) + planets[i].ay * secondsPerFrame*secondsPerFrame / 2;
+
+                    // Calculate new velocity
+                    //  v = v0 + a * t
+                    planets[i].xVel += planets[i].ax * secondsPerFrame;
+                    planets[i].yVel += planets[i].ay * secondsPerFrame;
+
+                    // System.out.println("What is distX: " + distanceX);
+                    // System.out.println("What is distY: " + distanceY);
+                    double newX = planets[i].getX() + distanceX; //planets[i].getX() + 1;
+                    double newY = planets[i].getY() + distanceY; //planets[i].getY() + 1;
+
+                    System.out.println("New X for planets[i] " + planets[i].id + " is: " + distanceX);
+
+                    if (newX < 0) {
+                        newX = 0;
+                    }
+                    else if (tree.width - 1 <= newX) {
+                        newX = tree.width - 1;
+                    }
+                    if (newY < 0) {
+                        newY = 0;
+                    }
+                    else if (tree.height - 1 <= newY) {
+                        newY = tree.height - 1;
+                    }
+
+                    planets[i].setX(newX);
+                    planets[i].setY(newY);
                 }
+                
                 
                 // await other workers to finish their calculations
                 try{
@@ -323,7 +317,7 @@ public class Barnes {
                     return;
                 }
                 try{
-                    TimeUnit.MILLISECONDS.sleep(1000);
+                    TimeUnit.MILLISECONDS.sleep(500);
                 } catch(InterruptedException ex) {}
                 System.out.println("\nSTEP\n" + j);
             }

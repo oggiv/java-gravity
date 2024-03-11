@@ -96,7 +96,6 @@ public class Barnes {
     }
     
     private static class Worker extends Thread {
-        
         int id;
         CyclicBarrier barrier;
         Tree tree;
@@ -119,15 +118,6 @@ public class Barnes {
             this.steps = steps;
         }
 
-        // Arguments:
-        //  barrier, tree, planets, startPlanetIndex, endPlanetIndex
-        // split array of planets among workers
-        // for each planet assigned to the worker
-        //  traverse tree and calculate forces (needs a queue or whatever)
-        //  write new position
-        // wait at barrier (needs barrier)
-
-        // function(planet)
         private void calculateForce(Planet planet, Node node){
             // calculateForce takes a planet and a node,
             // calculates the force that the planet will feel from the node,
@@ -139,27 +129,7 @@ public class Barnes {
                     F = mass * acceleration
                 Gravitational force
                     F = G * (mass1 * mass2) / distance^2
-                (Gravitational acceleration)
-                    a = F / mass1 = G * mass2 / distance^2
-                Distance moved
-                    distance = (current_velocity * time) + total_acceleration * (time^2) / 2
             */
-
-            /*double deltaX = node.centerX - planet.getX();
-            double deltaY = node.centerY - planet.getY();
-
-            double accelerationX = (deltaX == 0 ? 0 : gforce * node.mass / (deltaX*deltaX));
-            double accelerationY = (deltaY == 0 ? 0 : gforce * node.mass / (deltaY*deltaY));
-            
-            if (deltaX < 0) {
-                accelerationX = -accelerationX;
-            }
-            if (deltaY < 0) {
-                accelerationY = -accelerationY;
-            }
-
-            planet.ax += accelerationX;
-            planet.ay += accelerationY;*/
 
             double distanceX = node.centerX - planet.getX();
             double distanceY = node.centerY - planet.getY();
@@ -198,10 +168,15 @@ public class Barnes {
                 // Calculate the sum of accelerations acting on the planet
                 calculateForce(planet, node);
 
-                // Calculate where the planet 
-                // distance = (current_velocity * time) + total_acceleration * (time^2) / 2
+                // Calculate how far the planet will move based on current velocity and acceleration
+                //  distance = (current_velocity * time) + total_acceleration * (time^2) / 2
                 double distanceX = (planet.xVel * secondsPerFrame) + planet.ax * secondsPerFrame*secondsPerFrame / 2;
                 double distanceY = (planet.yVel * secondsPerFrame) + planet.ay * secondsPerFrame*secondsPerFrame / 2;
+
+                // Calculate new velocity
+                //  v = v0 + a * t
+                planet.xVel += planet.ax * secondsPerFrame;
+                planet.yVel += planet.ay * secondsPerFrame;
 
                 // System.out.println("What is distX: " + distanceX);
                 // System.out.println("What is distY: " + distanceY);

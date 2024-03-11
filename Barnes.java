@@ -145,7 +145,7 @@ public class Barnes {
                     distance = (current_velocity * time) + total_acceleration * (time^2) / 2
             */
 
-            double deltaX = node.centerX - planet.getX();
+            /*double deltaX = node.centerX - planet.getX();
             double deltaY = node.centerY - planet.getY();
 
             double accelerationX = (deltaX == 0 ? 0 : gforce * node.mass / (deltaX*deltaX));
@@ -157,6 +157,31 @@ public class Barnes {
             if (deltaY < 0) {
                 accelerationY = -accelerationY;
             }
+
+            planet.ax += accelerationX;
+            planet.ay += accelerationY;*/
+
+            double distanceX = node.centerX - planet.getX();
+            double distanceY = node.centerY - planet.getY();
+            
+            double distance = Math.sqrt(distanceX*distanceX + distanceY*distanceY);
+
+            double force;
+            if (distance <= 0.5 ) {
+                // !!! temporary fix to avoid collision weirdness. Change to (distance == 0) when fix isn't needed anymore
+                force = 0;
+            }
+            else {
+                force = gforce * planet.mass * node.mass / (distance*distance);
+            }
+
+            double angle = Math.atan2(distanceY, distanceX);
+
+            double forceX = force * Math.cos(angle);
+            double forceY = force * Math.sin(angle);
+
+            double accelerationX = forceX / planet.mass;
+            double accelerationY = forceY / planet.mass;
 
             planet.ax += accelerationX;
             planet.ay += accelerationY;

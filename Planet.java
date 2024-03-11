@@ -1,15 +1,15 @@
 public class Planet {
-    int id;
-    double mass;
-    double size;
+    public int id;
+    public double mass;
+    public double size;
 
-    boolean phase;
-    double x1, y1;
-    double x2, y2;
+    private boolean phase;
+    public double x1, y1;
+    public double x2, y2;
 
-    double ax, ay;
+    public double ax, ay;
 
-    double xVel, yVel;
+    public double xVel, yVel;
 
     public String toString() {
         // pretty string formatter

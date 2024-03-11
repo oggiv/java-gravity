@@ -2,9 +2,9 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 public class Tree {
-    Node root;
-    double height;
-    double width;
+    public Node root;
+    public double height;
+    public double width;
 
     public Tree(double height, double width) {
         this.height = height;

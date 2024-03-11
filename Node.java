@@ -1,23 +1,23 @@
 import java.util.ArrayList;
 
 public class Node {
-    double topLeftX;
-    double topLeftY;
-    double height;
-    double width;
+    public double topLeftX;
+    public double topLeftY;
+    public double height;
+    public double width;
 
-    String id;
-    int level;
+    public String id;
+    public int level;
 
-    Node[] quadrant;
+    public Node[] quadrant;
 
-    Planet planet;
+    public Planet planet;
 
-    double centerX;
-    double centerY;
-    double mass;
-    double xcomp;
-    double ycomp;
+    public double centerX;
+    public double centerY;
+    public double mass;
+    public double xcomp;
+    public double ycomp;
 
     public Node(double x, double y, double height, double width, String id, int level){
         this.id = id;

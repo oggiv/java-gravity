@@ -180,7 +180,8 @@ public class Barnes {
         double far;
         int steps;
         private final double gforce = 6.67 * Math.pow(10, -11);
-        private final double secondsPerFrame = 0.3;
+        private final double secondsPerFrame = 0.01;
+        private final double elasticity = 1.0;
         Draw draw;
         
         public Worker(int id, CyclicBarrier barrier, Tree tree, Planet[] planets, int startPlanetIndex, int endPlanetIndex, double far, int steps, Draw draw) {
@@ -208,30 +209,69 @@ public class Barnes {
                     F = G * (mass1 * mass2) / distance^2
             */
 
+            // Calculate the distances between the planets
             double distanceX = node.centerX - planet.getX();
             double distanceY = node.centerY - planet.getY();
-            
             double distance = Math.sqrt(distanceX*distanceX + distanceY*distanceY);
 
             double force;
-            if (distance <= 0.5 ) {
-                // !!! temporary fix to avoid collision weirdness. Change to (distance == 0) when fix isn't needed anymore
+
+            // Calculate the gravitational force
+            if (distance == 0 ) {
                 force = 0;
             }
             else {
                 force = gforce * planet.mass * node.mass / (distance*distance);
             }
 
+            // Calculate the directional components of the gravitational force
             double angle = Math.atan2(distanceY, distanceX);
 
             double forceX = force * Math.cos(angle);
             double forceY = force * Math.sin(angle);
 
+            // Calculate and add the accelerations in x and y directions
             double accelerationX = forceX / planet.mass;
             double accelerationY = forceY / planet.mass;
 
-            planet.ax += accelerationX;
-            planet.ay += accelerationY;
+            // Handle an eventual collision
+            if (node.hasPlanet() && distance <= (planet.size + node.planet.size)) {
+                // If a collision is detected we ignore the gravitational force of this planet for this time step. This should produce a bouncing effect.
+
+                // Find directional vector between planets
+                double directionX = node.planet.getX() - planet.getX();
+                double directionY = node.planet.getY() - planet.getY();
+
+                // Normalize the directional vector
+                double directionalLength = Math.sqrt(directionX*directionX + directionY*directionY);
+                directionX = directionX / directionalLength;
+                directionY = directionY / directionalLength;
+
+                // Project velocities onto directinal vector, producing two scalars
+                double v1 = planet.xVel * directionX + planet.yVel * directionY;
+                double v2 = node.planet.xVel * directionX + node.planet.yVel * directionY;
+
+                // Calculate scalar velocity after collision
+                double collisionVelocity = (planet.mass*v1 + node.planet.mass*v2 - node.planet.mass * elasticity * (v1 - v2)) / (planet.mass + node.planet.mass);
+
+                // Calculate the directional acceleration
+                double collisionAcceleration = (collisionVelocity) - v1; // + (collisionVelocity < 0 ? -0.2 : 0.2)
+
+                // Enhance collision acceleration based on how close the planets are
+                collisionAcceleration = collisionAcceleration;
+
+                // Multiply acceleration with directional vector to produce directional acceleration vector
+                double collisionX = directionX * collisionAcceleration;
+                double collisionY = directionY * collisionAcceleration;
+
+                // Add collisions acceleration to the planet's accelerations
+                planet.ax += collisionX + -(accelerationX * ((planet.size + node.planet.size) / distance));
+                planet.ay += collisionY + -(accelerationY * ((planet.size + node.planet.size) / distance));
+            }
+            else {
+                planet.ax += accelerationX;
+                planet.ay += accelerationY;
+            }
         }
 
         private void traverseTree(Planet planet, Node node) {
@@ -325,7 +365,7 @@ public class Barnes {
                 for(int i = startPlanetIndex; i <= endPlanetIndex; i++){
                     planets[i].updateCoordinates();
                     System.out.println(planets[i].toString());
-                    draw.addCircle(i, planets[i].getX()*10, planets[i].getY()*10, 30);
+                    draw.addCircle(i, planets[i].getX()*10, planets[i].getY()*10, 20*planets[i].size);
                 }
                 
                 
@@ -361,7 +401,7 @@ public class Barnes {
                     return;
                 }
                 try{
-                    TimeUnit.MILLISECONDS.sleep(500);
+                    TimeUnit.MILLISECONDS.sleep(1);
                 } catch(InterruptedException ex) {}
                 System.out.println("\nSTEP\n" + j);
             }

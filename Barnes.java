@@ -79,7 +79,7 @@ public class Barnes {
                 String[] row;
                 while ((line = buff.readLine()) != null) {
                     row = line.split(",");
-                    planets[id++] = new Planet(id, Double.parseDouble(row[0]), Double.parseDouble(row[1]), Double.parseDouble(row[2]), Double.parseDouble(row[3]), Double.parseDouble(row[4]), Double.parseDouble(row[5]));
+                    planets[id++] = new Planet(id, Double.parseDouble(row[0]), ((Double.parseDouble(row[0])/Math.pow(10, 11))+1), Double.parseDouble(row[1]), Double.parseDouble(row[2]), Double.parseDouble(row[3]), Double.parseDouble(row[4]));
                 }
             } catch (Exception e) {
                 //System.out.println("File " + args[0] + " could not be opened.");
@@ -87,11 +87,13 @@ public class Barnes {
         }
         else {
             // Randomize planets
-            for(int i = 0; i < gNumBodies; i++){    
+            double tempMass;
+            for(int i = 0; i < gNumBodies; i++){
+                tempMassModifier = rand.nextDouble();
                 planets[i] = new Planet(
                     i, 
-                    (rand.nextDouble()*Math.pow(10, 11)), 
-                    rand.nextDouble()+1, 
+                    (tempMassModifier*Math.pow(10, 11)), 
+                    tempMassModifier+1, 
                     rand.nextDouble()*(width - 0.2) + 0.1, 
                     rand.nextDouble()*(height - 0.2) + 0.1, 
                     rand.nextDouble()*0, 

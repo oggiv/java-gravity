@@ -1,6 +1,7 @@
 public class Planet {
     int id;
     double mass;
+    double size;
 
     boolean phase;
     double x1, y1;
@@ -60,9 +61,10 @@ public class Planet {
         this.phase = !this.phase;
     }
 
-    public Planet(int id, double mass, double x1, double y1, double xVel, double yVel) {
+    public Planet(int id, double mass, double size, double x1, double y1, double xVel, double yVel) {
         this.id = id;
         this.mass = mass;
+        this.size = size;
         this.phase = true;
         this.x1 = x1;
         this.y1 = y1;

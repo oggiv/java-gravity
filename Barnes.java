@@ -1,7 +1,10 @@
 // Barnes.java
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.sql.Time;
 import java.util.concurrent.*;
+import java.awt.Dimension;
+import javax.swing.*;
 
 public class Barnes {
 
@@ -22,7 +25,9 @@ public class Barnes {
         int amountOfPlanets = 0;
         Planet[] planets = new Planet[0];
 
+    
         if (0 < args.length) {
+            System.out.println("ARGS YES");
             try (BufferedReader buff = new BufferedReader(new FileReader(args[0]))) {
                 // read the amount of planets
                 String line = buff.readLine(); // does it remove the new line sign?
@@ -44,11 +49,60 @@ public class Barnes {
                 //System.out.println("File " + args[0] + " could not be opened.");
             }
         }
+        else{
+            System.out.println("ARGS NO");
+            try (BufferedReader buff = new BufferedReader(new FileReader("testPlanets.csv"))) {
+                // read the amount of planets
+                String line = buff.readLine(); // does it remove the new line sign?
+                amountOfPlanets = Integer.parseInt(line);
+                System.out.println("AMOUNT OF PLANETS: " + amountOfPlanets);
+                gNumBodies = amountOfPlanets;
+
+                // allocate array for planets
+                planets = new Planet[amountOfPlanets];
+
+                // read and create planets
+                int id = 0;
+                String[] row;
+                while ((line = buff.readLine()) != null) {
+                    row = line.split(",");
+                    planets[id] = new Planet(id, Double.parseDouble(row[0]), Double.parseDouble(row[1]), Double.parseDouble(row[2]), Double.parseDouble(row[3]), Double.parseDouble(row[4]), Double.parseDouble(row[5]));
+                    id++;
+                }
+            } catch (Exception e) {
+                System.out.println("File could not be opened.");
+            }
+        }
+            
+        //Space space = new Space();
+        System.out.println("Planets in the order they were added");
+        for (Planet planet : planets) {
+            System.out.println(planet.toString());
+        }
 
         int height = 32;
         int width = 32;
 
-        System.out.println("Height: " + height + ", Width: " + width);
+        int wm = 10;
+        int hm = 10;
+
+        // Graphics
+        JFrame frame = new JFrame();
+        Draw draw = new Draw(width*wm+50, height*hm+50, amountOfPlanets);
+
+        for(int i = 0; i < amountOfPlanets; i++){
+            draw.addCircle(i, planets[i].getX()*wm, planets[i].getY()*hm, 30);
+        }
+
+        frame.setSize(width*wm+50, height*hm+50);
+        frame.setTitle("N-Body Problem");
+
+        frame.add(draw);
+
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
+
+        //System.out.println("Height: " + height + ", Width: " + width);
 
         Tree tree = new Tree(height, width);
         tree.createTree(planets);
@@ -72,7 +126,7 @@ public class Barnes {
         for (int i = 0; i < numWorkers; i++) {
             start = i * stripSize;
             end = (i == numWorkers - 1) ? (gNumBodies - 1) : (start + stripSize - 1); // edge case. Giving the last worker extra work if the division is uneven
-            workers[i] = new Worker(i, barrier, tree, planets, start, end, far, numSteps);
+            workers[i] = new Worker(i, barrier, tree, planets, start, end, far, numSteps, draw);
             workers[i].start();
         }
 
@@ -106,8 +160,9 @@ public class Barnes {
         int steps;
         private final double gforce = 6.67 * Math.pow(10, -11);
         private final double secondsPerFrame = 0.3;
+        Draw draw;
         
-        public Worker(int id, CyclicBarrier barrier, Tree tree, Planet[] planets, int startPlanetIndex, int endPlanetIndex, double far, int steps) {
+        public Worker(int id, CyclicBarrier barrier, Tree tree, Planet[] planets, int startPlanetIndex, int endPlanetIndex, double far, int steps, Draw draw) {
             this.id = id;
             this.barrier = barrier;
             this.tree = tree;
@@ -116,6 +171,7 @@ public class Barnes {
             this.endPlanetIndex = endPlanetIndex;
             this.far = far;
             this.steps = steps;
+            this.draw = draw;
         }
 
         private void calculateForce(Planet planet, Node node){
@@ -183,6 +239,8 @@ public class Barnes {
                 double newX = planet.getX() + distanceX; //planet.getX() + 1;
                 double newY = planet.getY() + distanceY; //planet.getY() + 1;
 
+                System.out.println("New X for planet " + planet.id + " is: " + distanceX);
+
                 if (newX < 0) {
                     newX = 0;
                 }
@@ -198,23 +256,6 @@ public class Barnes {
 
                 planet.setX(newX);
                 planet.setY(newY);
-            }
-            else {
-                // calculate distance from planet to node's center of mass
-                distance = Math.sqrt(Math.pow(planet.getX() - node.centerX, 2) + Math.pow(planet.getY() - node.centerY, 2));
-                
-                if (far < distance) {
-                    // Approximate the force using this node
-                    calculateForce(planet, node);
-                }
-                else {
-                    // Continue down the tree
-                    for(int i = 0; i < 4; i++){
-                        traverseTree(planet, node.quadrant[i]);
-                    }
-                }
-            }
-
         }
         
         public void run() {
@@ -245,12 +286,14 @@ public class Barnes {
                 //  (also draw on screen)
                 for(int i = startPlanetIndex; i <= endPlanetIndex; i++){
                     planets[i].updateCoordinates();
+                    System.out.println(planets[i].toString());
+                    draw.addCircle(i, planets[i].getX()*10, planets[i].getY()*10, 30);
                 }
                 
                 
                 // wait for all planets to update
                 try{
-                barrier.await();
+                    barrier.await();
                 } catch(InterruptedException ex) {
                     System.out.println("Interrupted exception barrier.");
                     return;
@@ -261,6 +304,7 @@ public class Barnes {
                 
                 // First worker will rebuid the tree and other will wait for it to finish
                 if(id == 0){
+                    draw.redo();
                     tree.createTree(planets);
 
                     System.out.printf("\nstep %d\n", j);
@@ -278,6 +322,10 @@ public class Barnes {
                     System.out.println("Broken barrier exception.");
                     return;
                 }
+                try{
+                    TimeUnit.MILLISECONDS.sleep(1000);
+                } catch(InterruptedException ex) {}
+                System.out.println("\nSTEP\n" + j);
             }
         }
     }

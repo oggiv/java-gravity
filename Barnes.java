@@ -5,6 +5,7 @@ import java.sql.Time;
 import java.util.concurrent.*;
 import java.awt.Dimension;
 import javax.swing.*;
+import java.util.Random;
 
 public class Barnes {
 
@@ -14,70 +15,116 @@ public class Barnes {
             Reads planets from a .csv file.
             First line should be the amount of planets to read as an integer.
             Following lines should be planets of the format:
-                mass,positionX,positionY,velocityX,velocityY
+                mass,radius,positionX,positionY,velocityX,velocityY
         */
-        String file = args.length > 0 ? args[0] : "testPlanets.csv";
 
-        int gNumBodies = 1;
-        int numWorkers = 1;
-        double far = 100;
-        int numSteps = 300;
-        int amountOfPlanets = 0;
-        Planet[] planets = new Planet[0];
+        /** Command Line arguments
+        *  1 gNumBodies  -> How many planets
+        *  2 numSteps    -> Amount of steps in the program
+        *  3 far         -> Distance which will be considered too far for Barnes-Hut approximation
+        *  4 numWorkers  -> how many parallel workers 
+        *  5 graphics    -> false or true : show graphics or not
+        *  6 file bool   -> false or true : read from file 
+        *  7 file        -> file name. If empty, default would be used
+        */
 
+        int gNumBodies;
+        int numSteps;
+        double far;
+        int numWorkers;
+        Boolean graphics;
+        Boolean fileb;
 
-        try (BufferedReader buff = new BufferedReader(new FileReader(file))) {
-            // read the amount of planets
-            String line = buff.readLine(); // does it remove the new line sign?
-            amountOfPlanets = Integer.parseInt(line);
-            gNumBodies = amountOfPlanets;
-
-            // allocate array for planets
-            planets = new Planet[amountOfPlanets];
-
-            // read and create planets
-            int id = 0;
-            String[] row;
-            while ((line = buff.readLine()) != null) {
-                row = line.split(",");
-                planets[id] = new Planet(id, Double.parseDouble(row[0]), Double.parseDouble(row[1]), Double.parseDouble(row[2]), Double.parseDouble(row[3]), Double.parseDouble(row[4]), Double.parseDouble(row[5]));
-                id++;
-            }
-        } catch (Exception e) {
-            //System.out.println("File " + args[0] + " could not be opened.");
+        if(args.length > 0){
+            gNumBodies = Integer.valueOf(args[0]) > 0 ? Integer.valueOf(args[0]) : 1;
+            numSteps = Integer.valueOf(args[1]) > 0 ? Integer.valueOf(args[1]) : 300;
+            far = Integer.valueOf(args[2]) > 0 ? Double.valueOf(args[2]) : 100;
+            numWorkers = Integer.valueOf(args[3]) > 0 ? Integer.valueOf(args[3]) : 1;
+            graphics = args.length > 4 ? Boolean.valueOf(args[4]) : false;
+            fileb = args.length > 5 ? Boolean.valueOf(args[5]) : false;
+        }
+        else{
+            gNumBodies = 4;
+            numSteps = 300;
+            far = 100;
+            numWorkers = 1;
+            graphics = true;
+            fileb = false;
         }
 
-            
-        //Space space = new Space();
+        // Random number generator. Used for planets
+        Random rand = new Random();
+
+        // Planets
+        Planet[] planets = new Planet[gNumBodies];
+
+        // Space size
+        int height = 32;
+        int width = 32;
+
+        // Frame size multiplicator
+        int wm = 10;
+        int hm = 10;
+        
+        // Create planets
+        if(fileb) {
+            String file = args.length > 6 ? args[6] : "testPlanets.csv";
+
+            try (BufferedReader buff = new BufferedReader(new FileReader(file))) {
+                // read the amount of planets
+                String line;
+    
+                // read and create planets
+                int id = 0;
+                String[] row;
+                while ((line = buff.readLine()) != null) {
+                    row = line.split(",");
+                    planets[id++] = new Planet(id, Double.parseDouble(row[0]), Double.parseDouble(row[1]), Double.parseDouble(row[2]), Double.parseDouble(row[3]), Double.parseDouble(row[4]), Double.parseDouble(row[5]));
+                }
+            } catch (Exception e) {
+                //System.out.println("File " + args[0] + " could not be opened.");
+            }
+        }
+        else {
+            // Randomize planets
+            for(int i = 0; i < gNumBodies; i++){    
+                planets[i] = new Planet(
+                    i, 
+                    (rand.nextDouble()*Math.pow(10, 13)), 
+                    rand.nextDouble()*50+1, 
+                    rand.nextDouble()*width, 
+                    rand.nextDouble()*height, 
+                    rand.nextDouble()*0, 
+                    rand.nextDouble()*0);
+            }
+        }
+        
+        // Print out all the planets
         System.out.println("Planets in the order they were added");
         for (Planet planet : planets) {
             System.out.println(planet.toString());
         }
-
-        int height = 32;
-        int width = 32;
-
-        int wm = 10;
-        int hm = 10;
+        /*
+        */
 
         // Graphics
-        JFrame frame = new JFrame();
-        Draw draw = new Draw(width*wm+50, height*hm+50, amountOfPlanets);
-
-        for(int i = 0; i < amountOfPlanets; i++){
-            draw.addCircle(i, planets[i].getX()*wm, planets[i].getY()*hm, 30);
+        Draw draw = new Draw(width*wm+50, height*hm+50, gNumBodies);
+        if(graphics){
+            JFrame frame = new JFrame();
+            draw = new Draw(width*wm+50, height*hm+50, gNumBodies);
+    
+            for(int i = 0; i < gNumBodies; i++){
+                draw.addCircle(i, planets[i].getX()*wm, planets[i].getY()*hm, 30);
+            }
+    
+            frame.setSize(width*wm+50, height*hm+50);
+            frame.setTitle("N-Body Problem");
+            frame.add(draw);
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setVisible(true);
         }
 
-        frame.setSize(width*wm+50, height*hm+50);
-        frame.setTitle("N-Body Problem");
-
-        frame.add(draw);
-
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setVisible(true);
-
-        //System.out.println("Height: " + height + ", Width: " + width);
-
+        // Create tree
         Tree tree = new Tree(height, width);
         tree.createTree(planets);
 
@@ -185,9 +232,6 @@ public class Barnes {
 
             planet.ax += accelerationX;
             planet.ay += accelerationY;
-        }
-        private void calcNewCoord(Planet planet){
-            
         }
 
         private void traverseTree(Planet planet, Node node) {

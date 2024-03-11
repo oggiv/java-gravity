@@ -1,4 +1,4 @@
-import java.util.ArrayList;
+import java.util.Random;
 
 public class Node {
     public double topLeftX;
@@ -18,6 +18,7 @@ public class Node {
     public double mass;
     public double xcomp;
     public double ycomp;
+    public Random rand;
 
     public Node(double x, double y, double height, double width, String id, int level){
         this.id = id;
@@ -36,6 +37,7 @@ public class Node {
         planet = null;
         xcomp = 0;
         ycomp = 0;
+        rand = new Random();
     }
 
     public void addPlanet(Planet planet){ // add(Planet newPlanet)
@@ -60,46 +62,28 @@ public class Node {
                 quadrant[3] = new Node(topLeftX, topLeftY + height/2, height/2, width/2, id + "-3", this.level + 1);
             }
             
-            // Figure out which quadrant a new planet goes to and put it there
-            sendPlanet(planet);
-
+            
             // If there is a planet in this node already, send it to the children
             if(this.hasPlanet()){
+                if(planet.getX() == this.planet.getX()
+                    && planet.getY() == this.planet.getY())
+                {
+                    double snX = rand.nextDouble() * 4 - 2;
+                    double snY = rand.nextDouble() * 4 - 2;
+                    planet.setThisXY(planet.getX()+snX, planet.getY()+snY);
+                }
                 sendPlanet(this.planet);
                 this.planet = null;
             }
+            // Figure out which quadrant a new planet goes to and put it there
+            sendPlanet(planet);
+            
         }
-
-        // center stuff
-        /* 
-        System.out.println(" hasPlanet: " + this.hasPlanet());
-        if(this.hasPlanet()){
-            // no children -> center of gravity is the position of your only planet
-            centerX = this.planet.getX();
-            centerY = this.planet.getY();
-            System.out.println("One planet center of " + id + ": " + centerX + ":" + centerY);
-        }
-        else{
-            this.calculateCenter();
-            //System.out.println("Calculated center of " + id + ": " + centerX + ":" + centerY);
-        }
-
-        */
 
         this.centerX = this.xcomp / this.mass;
         this.centerY = this.ycomp / this.mass;
     } 
 
-    /*private void calculateCenter(){
-        double xTotal = 0;
-        double yTotal = 0;
-        for(int i = 0; i < 4; i++){
-            xTotal += quadrant[i].centerX * quadrant[i].mass;
-            yTotal += quadrant[i].centerY * quadrant[i].mass;        
-        }
-        this.centerX = xTotal / mass;
-        this.centerY = yTotal / mass;
-    }*/
 
     public boolean hasPlanet(){
         return this.planet != null;

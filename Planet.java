@@ -54,6 +54,18 @@ public class Planet {
         }
     }
 
+    // Be carefull!!!
+    public void setThisXY(double newX, double newY) {
+        if (phase) {
+            x1 = newX;
+            y1 = newY;
+        }
+        else {
+            x2 = newX;
+            y2 = newY;
+        }
+    }
+
     public void updateCoordinates() {
         // switch to new values for getX/Y and setX/Y
         this.ax = 0;

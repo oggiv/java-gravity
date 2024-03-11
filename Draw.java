@@ -3,6 +3,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.Ellipse2D;
 import javax.swing.JComponent;
+import java.util.Random;
 
 
 public class Draw extends JComponent{
@@ -18,17 +19,15 @@ public class Draw extends JComponent{
         height = h;
         circles = new Ellipse2D.Double[numPlanets];
 
-        colours = new Color[10];
-        colours[0] = new Color(211, 114, 143);
-        colours[1] = new Color(218, 172, 249);
-        colours[2] = new Color(140, 208, 242);
-        colours[3] = new Color(52, 117, 76);
-        colours[4] = new Color(128, 196, 107);
-        colours[5] = new Color(171, 59, 219);
-        colours[6] = new Color(109, 100, 63);
-        colours[7] = new Color(03, 11, 183);
-        colours[8] = new Color(27, 247, 129);
-        colours[9] = new Color(61, 0, 32);
+        Random rand = new Random();
+
+        colours = new Color[numPlanets];
+        for(int i = 0; i < numPlanets; i++){
+            int r = rand.nextInt(230);
+            int g = rand.nextInt(230);
+            int b = rand.nextInt(230);
+            colours[i] = new Color(r, g, b);
+        }
     }
 
     @Override
@@ -43,7 +42,7 @@ public class Draw extends JComponent{
     public void addCircle(int id, double x, double y, double r){
         double xx = x-(r/2);
         double yy = y-(r/2);
-        System.out.println("Adding circle " + id + ": " + xx + ", " + yy);
+        //System.out.println("Adding circle " + id + ": " + xx + ", " + yy);
         circles[id] = new Ellipse2D.Double(xx, yy, r, r);
     }
     public void moveCircle(int id, double x, double y){

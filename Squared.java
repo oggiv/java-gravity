@@ -1,9 +1,7 @@
 // Barnes.java
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.sql.Time;
 import java.util.concurrent.*;
-import java.awt.Dimension;
 import javax.swing.*;
 import java.util.Random;
 
@@ -41,12 +39,15 @@ public class Squared {
             fileb = args.length > 5 ? Boolean.valueOf(args[5]) : false;
         }
         else{
-            gNumBodies = 4;
-            numSteps = 10000;
+            gNumBodies = 120;
+            numSteps = 40000;
             numWorkers = 4;
-            graphics = true;
+            graphics = false;
             fileb = false;
         }
+        System.out.println("gNumBodies: " + gNumBodies);
+        System.out.println("numSteps: " + numSteps);
+        System.out.println("numWorkers: " + numWorkers);
 
         // Random number generator. Used for planets
         Random rand = new Random();
@@ -61,93 +62,104 @@ public class Squared {
         // Frame size multiplicator
         int wm = 10;
         int hm = 10;
-        
-        // Create planets
-        if(fileb) {
-            String file = args.length > 6 ? args[6] : "testPlanets.csv";
 
-            try (BufferedReader buff = new BufferedReader(new FileReader(file))) {
-                // read the amount of planets
-                String line;
-    
-                // read and create planets
-                int id = 0;
-                String[] row;
-                while ((line = buff.readLine()) != null) {
-                    row = line.split(",");
-                    planets[id++] = new Planet(id, Double.parseDouble(row[0]), Double.parseDouble(row[1]), Double.parseDouble(row[2]), Double.parseDouble(row[3]), Double.parseDouble(row[4]), Double.parseDouble(row[5]));
+        for(int k = 0; k < 5; k++){
+            // Create planets
+            if(fileb) {
+                String file = args.length > 6 ? args[6] : "testPlanets.csv";
+
+                try (BufferedReader buff = new BufferedReader(new FileReader(file))) {
+                    // read the amount of planets
+                    String line;
+        
+                    // read and create planets
+                    int id = 0;
+                    String[] row;
+                    while ((line = buff.readLine()) != null) {
+                        row = line.split(",");
+                        planets[id++] = new Planet(id, Double.parseDouble(row[0]), Double.parseDouble(row[1]), Double.parseDouble(row[2]), Double.parseDouble(row[3]), Double.parseDouble(row[4]), Double.parseDouble(row[5]));
+                    }
+                } catch (Exception e) {
+                    //System.out.println("File " + args[0] + " could not be opened.");
                 }
-            } catch (Exception e) {
-                //System.out.println("File " + args[0] + " could not be opened.");
             }
-        }
-        else {
-            // Randomize planets
-            for(int i = 0; i < gNumBodies; i++){    
-                planets[i] = new Planet(
-                    i, 
-                    (rand.nextDouble()*Math.pow(10, 13)), 
-                    rand.nextDouble()+1, 
-                    rand.nextDouble()*width, 
-                    rand.nextDouble()*height, 
-                    rand.nextDouble()*0, 
-                    rand.nextDouble()*0);
+            else {
+                // Randomize planets
+                for(int i = 0; i < gNumBodies; i++){    
+                    planets[i] = new Planet(
+                        i, 
+                        (rand.nextDouble()*Math.pow(10, 13)), 
+                        rand.nextDouble()+1, 
+                        rand.nextDouble()*width, 
+                        rand.nextDouble()*height, 
+                        rand.nextDouble()*0, 
+                        rand.nextDouble()*0);
+                }
             }
-        }
+            
+            // Print out all the planets
+            /*
+            System.out.println("Planets in the order they were added");
+            for (Planet planet : planets) {
+                System.out.println(planet.toString());
+            }
+            */
+
+            // Graphics
+            Draw draw = new Draw(width*wm+50, height*hm+50, gNumBodies);
+            if(graphics){
+                JFrame frame = new JFrame();
+                draw = new Draw(width*wm+50, height*hm+50, gNumBodies);
         
-        // Print out all the planets
-        System.out.println("Planets in the order they were added");
-        for (Planet planet : planets) {
-            System.out.println(planet.toString());
-        }
-        /*
-        */
-
-        // Graphics
-        Draw draw = new Draw(width*wm+50, height*hm+50, gNumBodies);
-        if(graphics){
-            JFrame frame = new JFrame();
-            draw = new Draw(width*wm+50, height*hm+50, gNumBodies);
-    
-            for(int i = 0; i < gNumBodies; i++){
-                draw.addCircle(i, planets[i].getX()*wm, planets[i].getY()*hm, 30);
+                for(int i = 0; i < gNumBodies; i++){
+                    draw.addCircle(i, planets[i].getX()*wm, planets[i].getY()*hm, 30);
+                }
+                
+                frame.setSize(width*wm+50, height*hm+50);
+                frame.setTitle("N-Body Problem");
+                frame.add(draw);
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.setVisible(true);
             }
-    
-            frame.setSize(width*wm+50, height*hm+50);
-            frame.setTitle("N-Body Problem");
-            frame.add(draw);
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setVisible(true);
-        }
 
-        //System.out.println("Planets in the order they were added");
-        System.out.println("\nBefore");
-        for (Planet planet : planets) {
-            System.out.println(planet.toString());
-        }
-
-        CyclicBarrier barrier = new CyclicBarrier(numWorkers);
-        int stripSize = (gNumBodies % numWorkers == 0) ? (gNumBodies / numWorkers) : ((gNumBodies / numWorkers) + 1);
-        int start;
-        int end;
-
-        // Create workers
-        Worker[] workers = new Worker[numWorkers];
-        for (int i = 0; i < numWorkers; i++) {
-            start = i * stripSize;
-            end = (i == numWorkers - 1) ? (gNumBodies - 1) : (start + stripSize - 1); // edge case. Giving the last worker extra work if the division is uneven
-            workers[i] = new Worker(i, width, height, barrier, planets, start, end, numSteps, draw);
-            workers[i].start();
-        }
-
-        // Wait for workers to complete their 
-        for (int i = 0; i < numWorkers; i++) {
-            try{
-                workers[i].join();
-            } catch (InterruptedException ex){
-                System.out.println("JOIN INTERRUPTED");
-                return;
+            //System.out.println("Planets in the order they were added");
+            /*
+            System.out.println("\nBefore");
+            for (Planet planet : planets) {
+                System.out.println(planet.toString());
             }
+            */
+
+            CyclicBarrier barrier = new CyclicBarrier(numWorkers);
+            int stripSize = (gNumBodies % numWorkers == 0) ? (gNumBodies / numWorkers) : ((gNumBodies / numWorkers) + 1);
+            int start;
+            int end;
+
+            long startTime = System.nanoTime();
+
+            // Create workers
+            Worker[] workers = new Worker[numWorkers];
+            for (int i = 0; i < numWorkers; i++) {
+                start = i * stripSize;
+                end = (i == numWorkers - 1) ? (gNumBodies - 1) : (start + stripSize - 1); // edge case. Giving the last worker extra work if the division is uneven
+                workers[i] = new Worker(i, width, height, barrier, planets, start, end, numSteps, draw, graphics);
+                workers[i].start();
+            }
+            
+            // Wait for workers to complete their 
+            for (int i = 0; i < numWorkers; i++) {
+                try{
+                    workers[i].join();
+                } catch (InterruptedException ex){
+                    System.out.println("JOIN INTERRUPTED");
+                    return;
+                }
+            }
+            
+            long runTime = System.nanoTime() - startTime;
+            double secs = Math.round(runTime * Math.pow(10, -6));
+
+            System.out.println("Runtime: " + secs + " ms");
         }
 
         /*System.out.println("\nAfter");
@@ -172,8 +184,9 @@ public class Squared {
         Draw draw;
         int width;
         int height;
+        Boolean graphics;
         
-        public Worker(int id, int width, int height, CyclicBarrier barrier, Planet[] planets, int startPlanetIndex, int endPlanetIndex, int steps, Draw draw) {
+        public Worker(int id, int width, int height, CyclicBarrier barrier, Planet[] planets, int startPlanetIndex, int endPlanetIndex, int steps, Draw draw, Boolean graphics) {
             this.id = id;
             this.barrier = barrier;
             this.planets = planets;
@@ -183,6 +196,7 @@ public class Squared {
             this.draw = draw;
             this.width = width;
             this.height = height;
+            this.graphics = graphics;
         }
 
         private void calculateForce(int index, Planet[] planets){
@@ -290,7 +304,7 @@ public class Squared {
                     double newX = planets[i].getX() + distanceX; //planets[i].getX() + 1;
                     double newY = planets[i].getY() + distanceY; //planets[i].getY() + 1;
 
-                    System.out.println("New X for planets[i] " + planets[i].id + " is: " + distanceX);
+                    //System.out.println("New X for planets[i] " + planets[i].id + " is: " + distanceX);
 
                     if (newX < 0) {
                         newX = 0;
@@ -327,8 +341,9 @@ public class Squared {
                 //  (also draw on screen)
                 for(int i = startPlanetIndex; i <= endPlanetIndex; i++){
                     planets[i].updateCoordinates();
-                    System.out.println(planets[i].toString());
-                    draw.addCircle(i, planets[i].getX()*10, planets[i].getY()*10, 20*planets[i].size);
+                    //System.out.println(planets[i].toString());
+                    if(graphics)
+                        draw.addCircle(i, planets[i].getX()*10, planets[i].getY()*10, 20*planets[i].size);
                 }
                 
                 
@@ -344,13 +359,14 @@ public class Squared {
                 }
                 
                 // First worker will rebuid the tree and other will wait for it to finish
-                if(id == 0){
+                if(id == 0 && graphics){
                     draw.redo();
-
+                    /* 
                     System.out.printf("\nstep %d\n", j);
                     for (Planet planet : planets) {
                         System.out.println(planet.toString());
                     }
+                    */
                 }
                 
                 try{
@@ -362,9 +378,12 @@ public class Squared {
                     System.out.println("Broken barrier exception.");
                     return;
                 }
-                try{
-                    TimeUnit.MILLISECONDS.sleep(10);
-                } catch(InterruptedException ex) {}
+
+                if(graphics){
+                    try{
+                        TimeUnit.MILLISECONDS.sleep(10);
+                    } catch(InterruptedException ex) {}
+                }
 
             }
         }

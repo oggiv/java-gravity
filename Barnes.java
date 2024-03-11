@@ -41,13 +41,8 @@ public class Barnes {
                     id++;
                 }
             } catch (Exception e) {
-                System.out.println("File " + args[0] + " could not be opened.");
+                //System.out.println("File " + args[0] + " could not be opened.");
             }
-        }
-        //Space space = new Space();
-        System.out.println("Planets in the order they were added");
-        for (Planet planet : planets) {
-            System.out.println(planet.toString());
         }
 
         int height = 32;
@@ -58,8 +53,14 @@ public class Barnes {
         Tree tree = new Tree(height, width);
         tree.createTree(planets);
 
-        System.out.println("\nTree");
-        tree.prettyPrint();
+        //System.out.println("\nTree");
+        //tree.prettyPrint();
+
+        //System.out.println("Planets in the order they were added");
+        System.out.println("\nBefore");
+        for (Planet planet : planets) {
+            System.out.println(planet.toString());
+        }
 
         CyclicBarrier barrier = new CyclicBarrier(numWorkers);
         int stripSize = (gNumBodies % numWorkers == 0) ? (gNumBodies / numWorkers) : ((gNumBodies / numWorkers) + 1);
@@ -85,7 +86,12 @@ public class Barnes {
             }
         }
 
-        tree.prettyPrint();
+        /*System.out.println("\nAfter");
+        for (Planet planet : planets) {
+            System.out.println(planet.toString());
+        }*/
+
+        //tree.prettyPrint();
 
     }
     
@@ -100,7 +106,7 @@ public class Barnes {
         double far;
         int steps;
         private final double gforce = 6.67 * Math.pow(10, -11);
-        private final double secondsPerFrame = 1;
+        private final double secondsPerFrame = 0.3;
         
         public Worker(int id, CyclicBarrier barrier, Tree tree, Planet[] planets, int startPlanetIndex, int endPlanetIndex, double far, int steps) {
             this.id = id;
@@ -129,7 +135,7 @@ public class Barnes {
             // and adds this acceleration to a sum of accelerations that the planet feels
 
             /* Formulas
-                Newton's first law
+                Newton's second law
                     F = mass * acceleration
                 Gravitational force
                     F = G * (mass1 * mass2) / distance^2
@@ -256,6 +262,11 @@ public class Barnes {
                 // First worker will rebuid the tree and other will wait for it to finish
                 if(id == 0){
                     tree.createTree(planets);
+
+                    System.out.printf("\nstep %d\n", j);
+                    for (Planet planet : planets) {
+                        System.out.println(planet.toString());
+                    }
                 }
                 
                 try{
@@ -271,4 +282,3 @@ public class Barnes {
         }
     }
 }
-

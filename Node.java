@@ -22,8 +22,8 @@ public class Node {
     public Node(double x, double y, double height, double width, String id, int level){
         this.id = id;
         this.level = level;
-        topLeftX = x;
-        topLeftY = y;
+        this.topLeftX = x;
+        this.topLeftY = y;
         this.height = height;
         this.width = width;
         quadrant = new Node[4];
@@ -48,7 +48,7 @@ public class Node {
         if(!this.hasPlanet() && !this.hasChildren()){ // does it have child nodes?
             // no planet in node and no child nodes -> add planet to node
             this.planet = planet;
-            System.out.println(this.planet.toString());
+            //System.out.println(this.planet.toString());
         }
         else{
             // planet already in node -> split node into 4, add planets to the corresponding nodes

@@ -90,10 +90,10 @@ public class Barnes {
             for(int i = 0; i < gNumBodies; i++){    
                 planets[i] = new Planet(
                     i, 
-                    (rand.nextDouble()*Math.pow(10, 13)), 
-                    rand.nextDouble()*50+1, 
-                    rand.nextDouble()*width, 
-                    rand.nextDouble()*height, 
+                    (rand.nextDouble()*Math.pow(10, 11)), 
+                    rand.nextDouble()+1, 
+                    rand.nextDouble()*(width - 0.2) + 0.1, 
+                    rand.nextDouble()*(height - 0.2) + 0.1, 
                     rand.nextDouble()*0, 
                     rand.nextDouble()*0);
             }

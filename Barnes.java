@@ -141,16 +141,19 @@ public class Barnes {
 
             double deltaX = node.centerX - planet.getX();
             double deltaY = node.centerY - planet.getY();
-            
-            planet.ax += deltaX == 0 ? 0 : gforce * node.mass / (deltaX*deltaX);
-            planet.ay += deltaY == 0 ? 0 : gforce * node.mass / (deltaY*deltaY);
 
+            double accelerationX = (deltaX == 0 ? 0 : gforce * node.mass / (deltaX*deltaX));
+            double accelerationY = (deltaY == 0 ? 0 : gforce * node.mass / (deltaY*deltaY));
+            
             if (deltaX < 0) {
-                planet.ax = -planet.ax;
+                accelerationX = -accelerationX;
             }
             if (deltaY < 0) {
-                planet.ay = -planet.ay;
+                accelerationY = -accelerationY;
             }
+
+            planet.ax += accelerationX;
+            planet.ay += accelerationY;
         }
 
         private void traverseTree(Planet planet, Node node) {

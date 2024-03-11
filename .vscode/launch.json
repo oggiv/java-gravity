@@ -3,6 +3,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "Squared",
+      "request": "launch",
+      "mainClass": "Squared",
+      "projectName": "id1217group42_4fc8f88a"
+    },
+    {
+      "type": "java",
       "name": "Barnes",
       "request": "launch",
       "mainClass": "Barnes",

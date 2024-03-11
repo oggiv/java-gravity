@@ -1,9 +1,7 @@
 // Barnes.java
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.sql.Time;
 import java.util.concurrent.*;
-import java.awt.Dimension;
 import javax.swing.*;
 import java.util.Random;
 
@@ -45,9 +43,9 @@ public class Barnes {
         }
         else{
             gNumBodies = 4;
-            numSteps = 300;
+            numSteps = 10000;
             far = 100;
-            numWorkers = 1;
+            numWorkers = 4;
             graphics = true;
             fileb = false;
         }
@@ -87,7 +85,7 @@ public class Barnes {
         }
         else {
             // Randomize planets
-            double tempMass;
+            double tempMassModifier;
             for(int i = 0; i < gNumBodies; i++){
                 tempMassModifier = rand.nextDouble();
                 planets[i] = new Planet(
@@ -259,9 +257,6 @@ public class Barnes {
                 // Calculate the directional acceleration
                 double collisionAcceleration = (collisionVelocity) - v1; // + (collisionVelocity < 0 ? -0.2 : 0.2)
 
-                // Enhance collision acceleration based on how close the planets are
-                collisionAcceleration = collisionAcceleration;
-
                 // Multiply acceleration with directional vector to produce directional acceleration vector
                 double collisionX = directionX * collisionAcceleration;
                 double collisionY = directionY * collisionAcceleration;
@@ -403,9 +398,9 @@ public class Barnes {
                     return;
                 }
                 try{
-                    TimeUnit.MILLISECONDS.sleep(1);
+                    TimeUnit.MILLISECONDS.sleep(10);
                 } catch(InterruptedException ex) {}
-                System.out.println("\nSTEP\n" + j);
+
             }
         }
     }

@@ -52,7 +52,10 @@ public class Draw extends JComponent{
     }
 
     public void addCircle(int id, double x, double y, double r){
-        circles[id] = new Ellipse2D.Double(x-(r/2), y-(r/2), r, r);
+        double xx = x-(r/2);
+        double yy = y-(r/2);
+        System.out.println("Adding circle " + id + ": " + xx + ", " + yy);
+        circles[id] = new Ellipse2D.Double(xx, yy, r, r);
     }
     public void moveCircle(int id, double x, double y){
         double oldx = circles[id].getX();

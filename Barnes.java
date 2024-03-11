@@ -83,18 +83,18 @@ public class Barnes {
         int height = 32;
         int width = 32;
 
-        int wm = 100;
-        int hm = 100;
+        int wm = 10;
+        int hm = 10;
 
         // Graphics
         JFrame frame = new JFrame();
-        Draw draw = new Draw(width*wm+100, height*hm+100, amountOfPlanets);
+        Draw draw = new Draw(width*wm+50, height*hm+50, amountOfPlanets);
 
         for(int i = 0; i < amountOfPlanets; i++){
             draw.addCircle(i, planets[i].getX()*wm, planets[i].getY()*hm, 30);
         }
 
-        frame.setSize(width*wm+100, height*hm+100);
+        frame.setSize(width*wm+50, height*hm+50);
         frame.setTitle("N-Body Problem");
 
         frame.add(draw);
@@ -204,26 +204,20 @@ public class Barnes {
             }
         }
 
-        private void traverseTree(Planet planet, Node node) {
-            double distance;
-
-            if (!node.hasChildren()) {
-                if (!node.hasPlanet() || node.planet.id == planet.id) {
-                    return;
-                }
-
-                // Calculate the sum of accelerations acting on the planet
-                calculateForce(planet, node);
-
-                // Calculate where the planet 
+        private void calcNewCoords(Planet planet){
+            // Calculate where the planet 
                 // distance = (current_velocity * time) + total_acceleration * (time^2) / 2
                 double distanceX = (planet.xVel * secondsPerFrame) + planet.ax * secondsPerFrame*secondsPerFrame / 2;
                 double distanceY = (planet.yVel * secondsPerFrame) + planet.ay * secondsPerFrame*secondsPerFrame / 2;
+
+                System.out.println("Distance X for planet " + planet.id + " is: " + distanceX);
 
                 // System.out.println("What is distX: " + distanceX);
                 // System.out.println("What is distY: " + distanceY);
                 double newX = planet.getX() + distanceX; //planet.getX() + 1;
                 double newY = planet.getY() + distanceY; //planet.getY() + 1;
+
+                System.out.println("New X for planet " + planet.id + " is: " + distanceX);
 
                 if (newX < 0) {
                     newX = 0;
@@ -240,6 +234,20 @@ public class Barnes {
 
                 planet.setX(newX);
                 planet.setY(newY);
+        }
+
+        private void traverseTree(Planet planet, Node node) {
+            double distance;
+
+            if (!node.hasChildren()) {
+                if (!node.hasPlanet() || node.planet.id == planet.id) {
+                    return;
+                }
+
+                // Calculate the sum of accelerations acting on the planet
+                calculateForce(planet, node);
+
+                calcNewCoords(planet);
             }
             else {
                 // calculate distance from planet to node's center of mass
@@ -248,6 +256,8 @@ public class Barnes {
                 if (far < distance) {
                     // Approximate the force using this node
                     calculateForce(planet, node);
+
+                    calcNewCoords(planet);
                 }
                 else {
                     // Continue down the tree
@@ -287,6 +297,7 @@ public class Barnes {
                 //  (also draw on screen)
                 for(int i = startPlanetIndex; i <= endPlanetIndex; i++){
                     planets[i].updateCoordinates();
+                    System.out.println(planets[i].toString());
                     draw.addCircle(i, planets[i].getX()*10, planets[i].getY()*10, 30);
                 }
                 
@@ -317,6 +328,10 @@ public class Barnes {
                     System.out.println("Broken barrier exception.");
                     return;
                 }
+                try{
+                    TimeUnit.MILLISECONDS.sleep(1000);
+                } catch(InterruptedException ex) {}
+                System.out.println("\nSTEP\n" + j);
             }
         }
     }

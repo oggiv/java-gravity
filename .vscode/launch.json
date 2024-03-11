@@ -3,6 +3,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "Barnes",
+      "request": "launch",
+      "mainClass": "Barnes",
+      "projectName": "id1217group42_4fc8f88a"
+    },
+    {
+      "type": "java",
       "name": "Draw",
       "request": "launch",
       "mainClass": "Draw",

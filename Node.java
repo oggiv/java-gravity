@@ -48,7 +48,7 @@ public class Node {
         if(!this.hasPlanet() && !this.hasChildren()){ // does it have child nodes?
             // no planet in node and no child nodes -> add planet to node
             this.planet = planet;
-            System.out.println(this.planet.toString());
+            //System.out.println(this.planet.toString());
         }
         else{
             // planet already in node -> split node into 4, add planets to the corresponding nodes

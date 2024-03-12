@@ -36,7 +36,7 @@ public class Barnes {
         if(args.length > 0){
             gNumBodies = Integer.valueOf(args[0]) > 0 ? Integer.valueOf(args[0]) : 1;
             numSteps = Integer.valueOf(args[1]) > 0 ? Integer.valueOf(args[1]) : 300;
-            far = Integer.valueOf(args[2]) > 0 ? Double.valueOf(args[2]) : 100;
+            far = 0.8;//Integer.valueOf(args[2]) > 0 ? Double.valueOf(args[2]) : 100;
             numWorkers = Integer.valueOf(args[3]) > 0 ? Integer.valueOf(args[3]) : 1;
             graphics = args.length > 4 ? Boolean.valueOf(args[4]) : false;
             fileb = args.length > 5 ? Boolean.valueOf(args[5]) : false;
@@ -44,7 +44,7 @@ public class Barnes {
         else{
             gNumBodies = 240;
             numSteps = 40000;
-            far = 6;
+            far = 0.5; //6;
             numWorkers = 1;
             graphics = false;
             fileb = false;
@@ -61,8 +61,8 @@ public class Barnes {
         Planet[] planets = new Planet[gNumBodies];
 
         // Space size
-        int height = 32;
-        int width = 32;
+        int height = 1000; //32;
+        int width = 1000; //32;
 
         // Frame size multiplicator
         int wm = 10;
@@ -302,8 +302,9 @@ public class Barnes {
             else {
                 // calculate distance from planet to node's center of mass
                 distance = Math.sqrt(Math.pow(planet.getX() - node.centerX, 2) + Math.pow(planet.getY() - node.centerY, 2));
-                
-                if (far < distance) {
+                //double diagonal = Math.sqrt(node.width*node.width + node.height*node.height);
+                // if (far < distance) {
+                if (node.width / distance < far) {
                     // Approximate the force using this node
                     calculateForce(planet, node);
                 }
@@ -344,16 +345,16 @@ public class Barnes {
                     //System.out.println("New X for planets[i] " + planets[i].id + " is: " + distanceX);
 
                     if (newX < 0) {
-                        newX = 0;
-                    }
-                    else if (tree.width - 1 <= newX) {
                         newX = tree.width - 1;
                     }
+                    else if (tree.width - 1 <= newX) {
+                        newX = 0;
+                    }
                     if (newY < 0) {
-                        newY = 0;
+                        newY = tree.height - 1;
                     }
                     else if (tree.height - 1 <= newY) {
-                        newY = tree.height - 1;
+                        newY = 0;
                     }
 
                     planets[i].setX(newX);

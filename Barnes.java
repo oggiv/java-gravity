@@ -36,16 +36,16 @@ public class Barnes {
         if(args.length > 0){
             gNumBodies = Integer.valueOf(args[0]) > 0 ? Integer.valueOf(args[0]) : 1;
             numSteps = Integer.valueOf(args[1]) > 0 ? Integer.valueOf(args[1]) : 300;
-            far = 0.8;//Integer.valueOf(args[2]) > 0 ? Double.valueOf(args[2]) : 100;
+            far = Double.valueOf(args[2]) >= 0 ? Double.valueOf(args[2]) : 0.5;
             numWorkers = Integer.valueOf(args[3]) > 0 ? Integer.valueOf(args[3]) : 1;
             graphics = args.length > 4 ? Boolean.valueOf(args[4]) : false;
             fileb = args.length > 5 ? Boolean.valueOf(args[5]) : false;
         }
         else{
-            gNumBodies = 240;
+            gNumBodies = 120;
             numSteps = 40000;
             far = 0.5; //6;
-            numWorkers = 1;
+            numWorkers = 4;
             graphics = false;
             fileb = false;
         }
@@ -61,8 +61,8 @@ public class Barnes {
         Planet[] planets = new Planet[gNumBodies];
 
         // Space size
-        int height = 1000; //32;
-        int width = 1000; //32;
+        int height = 32; //32;
+        int width = 32; //32;
 
         // Frame size multiplicator
         int wm = 10;

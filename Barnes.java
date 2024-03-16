@@ -1,6 +1,8 @@
 // Barnes.java
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.concurrent.*;
 import javax.swing.*;
 import java.util.Random;
@@ -26,33 +28,58 @@ public class Barnes {
         *  7 file        -> file name. If empty, default would be used
         */
 
-        int gNumBodies;
-        int numSteps;
-        double far;
-        int numWorkers;
-        Boolean graphics;
-        Boolean fileb;
+        /*
+            New command line arguments
+                java Barnes [flags] [input file]
+                Flags
+                    -b number of bodies/planets
+                    -s number of timesteps
+                    -t number of threads
+                    -q theta quotient for approximation
+        */
 
-        if(args.length > 0){
-            gNumBodies = Integer.valueOf(args[0]) > 0 ? Integer.valueOf(args[0]) : 1;
-            numSteps = Integer.valueOf(args[1]) > 0 ? Integer.valueOf(args[1]) : 300;
-            far = Double.valueOf(args[2]) >= 0 ? Double.valueOf(args[2]) : 0.5;
-            numWorkers = Integer.valueOf(args[3]) > 0 ? Integer.valueOf(args[3]) : 1;
-            graphics = args.length > 4 ? Boolean.valueOf(args[4]) : false;
-            fileb = args.length > 5 ? Boolean.valueOf(args[5]) : false;
+        int gNumBodies = 50;
+        int numSteps = 40000;
+        double far = 0.5;
+        int numWorkers = 1;
+        Boolean graphics = true;
+
+        Boolean readFile = false;
+
+        for (int i = 0; i < args.length; i++) {
+            if (args[i].compareTo("-b") == 0 && (i+1) < args.length) {
+                if (0 < Integer.valueOf(args[i+1])) {
+                    gNumBodies = Integer.valueOf(args[i+1]);
+                }
+                i++;
+            }
+            else if (args[i].compareTo("-s") == 0 && (i+1) < args.length) {
+                if (0 < Integer.valueOf(args[i+1])) {
+                    numSteps = Integer.valueOf(args[i+1]);
+                }
+                i++;
+            }
+            else if (args[i].compareTo("-t") == 0 && (i+1) < args.length) {
+                if (0 < Integer.valueOf(args[i+1])) {
+                    numWorkers = Integer.valueOf(args[i+1]);
+                }
+                i++;
+            }
+            else if (args[i].compareTo("-q") == 0 && (i+1) < args.length) {
+                if (0 <= Double.valueOf(args[i+1]) && Double.valueOf(args[i+1]) <= 1) {
+                    far = Double.valueOf(args[i+1]);
+                }
+                i++;
+            }
+            else {
+                readFile = true;
+            }
         }
-        else{
-            gNumBodies = 120;
-            numSteps = 40000;
-            far = 0.5; //6;
-            numWorkers = 4;
-            graphics = false;
-            fileb = false;
-        }
-        System.out.println("gNumBodies: " + gNumBodies);
-        System.out.println("numSteps: " + numSteps);
-        System.out.println("far: " + far);
-        System.out.println("numWorkers: " + numWorkers);
+
+        System.out.println("number of bodies: " + gNumBodies);
+        System.out.println("number of timesteps: " + numSteps);
+        System.out.println("number of workers: " + numWorkers);
+        System.out.println("approximation quotient: " + far);
         
         // Random number generator. Used for planets
         Random rand = new Random();
@@ -70,7 +97,7 @@ public class Barnes {
 
         for(int k = 0; k < 5; k++){
             // Create planets
-            if(fileb) {
+            if(readFile) {
                 String file = args.length > 6 ? args[6] : "testPlanets.csv";
 
                 try (BufferedReader buff = new BufferedReader(new FileReader(file))) {
@@ -84,11 +111,16 @@ public class Barnes {
                         row = line.split(",");
                         planets[id++] = new Planet(id, Double.parseDouble(row[0]), ((Double.parseDouble(row[0])/Math.pow(10, 11))+1), Double.parseDouble(row[1]), Double.parseDouble(row[2]), Double.parseDouble(row[3]), Double.parseDouble(row[4]));
                     }
-                } catch (Exception e) {
-                    //System.out.println("File " + args[0] + " could not be opened.");
+                } catch (FileNotFoundException e) {
+                    System.err.println("File " + args[0] + " could not be opened.");
+                    readFile = false;
+                }
+                catch (IOException e) {
+                    System.err.println("IOException.");
                 }
             }
-            else {
+
+            if (!readFile) {
                 // Randomize planets
                 double tempMassModifier;
                 for(int i = 0; i < gNumBodies; i++){
@@ -103,14 +135,6 @@ public class Barnes {
                         rand.nextDouble()*0);
                 }
             }
-            
-            // Print out all the planets
-            /*
-            System.out.println("Planets in the order they were added");
-            for (Planet planet : planets) {
-                System.out.println(planet.toString());
-            }
-            */
 
             // Graphics
             Draw draw = new Draw(width*wm+50, height*hm+50, gNumBodies);
@@ -133,23 +157,15 @@ public class Barnes {
             Tree tree = new Tree(height, width);
             tree.createTree(planets);
 
-            //System.out.println("\nTree");
-            //tree.prettyPrint();
-            
-            //System.out.println("Planets in the order they were added");
-            /*
-            System.out.println("\nBefore");
-            for (Planet planet : planets) {
-                System.out.println(planet.toString());
-            }
-            */
-            
+            // Create barrier
             CyclicBarrier barrier = new CyclicBarrier(numWorkers);
+            
+            // Calculate amount of planets per worker
             int stripSize = (gNumBodies % numWorkers == 0) ? (gNumBodies / numWorkers) : ((gNumBodies / numWorkers) + 1);
             int start;
             int end;
             
-            long startTime = System.nanoTime();
+            //long startTime = System.nanoTime();
             
             // Create workers
             Worker[] workers = new Worker[numWorkers];
@@ -170,10 +186,10 @@ public class Barnes {
                 }
             }
             
-            long runTime = System.nanoTime() - startTime;
-            double secs = Math.round(runTime * Math.pow(10, -6));
+            // long runTime = System.nanoTime() - startTime;
+            // double secs = Math.round(runTime * Math.pow(10, -6));
             
-            System.out.println("Runtime: " + secs + " ms");
+            // System.out.println("Runtime: " + secs + " ms");
         }
         
         /*System.out.println("\nAfter");

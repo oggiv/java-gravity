@@ -45,6 +45,7 @@ public class Barnes {
         int numWorkers = 1;
         Boolean graphics = true;
 
+        String file = "";
         Boolean readFile = false;
 
         for (int i = 0; i < args.length; i++) {
@@ -74,6 +75,7 @@ public class Barnes {
             }
             else {
                 readFile = true;
+                file = args[i];
             }
         }
         
@@ -93,7 +95,6 @@ public class Barnes {
 
         // Create planets
         if(readFile) {
-            String file = args.length > 6 ? args[6] : "testPlanets.csv";
 
             try (BufferedReader buff = new BufferedReader(new FileReader(file))) {
                 // read the amount of planets

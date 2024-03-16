@@ -76,11 +76,6 @@ public class Barnes {
                 readFile = true;
             }
         }
-
-        System.out.println("number of bodies: " + gNumBodies);
-        System.out.println("number of timesteps: " + numSteps);
-        System.out.println("number of workers: " + numWorkers);
-        System.out.println("approximation quotient: " + far);
         
         // Random number generator. Used for planets
         Random rand = new Random();
@@ -102,7 +97,9 @@ public class Barnes {
 
             try (BufferedReader buff = new BufferedReader(new FileReader(file))) {
                 // read the amount of planets
-                String line;
+                String line = buff.readLine();
+                gNumBodies = Integer.parseInt(line);
+                planets = new Planet[gNumBodies];
                 
                 // read and create planets
                 int id = 0;
@@ -136,6 +133,11 @@ public class Barnes {
                     rand.nextDouble()*4 - 2);
             }
         }
+
+        System.out.println("number of bodies: " + gNumBodies);
+        System.out.println("number of timesteps: " + numSteps);
+        System.out.println("number of workers: " + numWorkers);
+        System.out.println("approximation quotient: " + far);
 
         // Graphics
         Draw draw = new Draw(width*wm+50, height*hm+50, gNumBodies);

@@ -23,9 +23,9 @@ public class Draw extends JComponent{
 
         colours = new Color[numPlanets];
         for(int i = 0; i < numPlanets; i++){
-            int r = rand.nextInt(230);
-            int g = rand.nextInt(230);
-            int b = rand.nextInt(230);
+            int r = rand.nextInt(230) + 25;
+            int g = rand.nextInt(230) + 25;
+            int b = rand.nextInt(230) + 25;
             colours[i] = new Color(r, g, b);
         }
     }

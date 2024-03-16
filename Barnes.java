@@ -1,4 +1,5 @@
 // Barnes.java
+import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileNotFoundException;
@@ -148,6 +149,7 @@ public class Barnes {
             frame.setSize(width*wm+50, height*hm+50);
             frame.setTitle("N-Body Problem");
             frame.add(draw);
+            frame.getContentPane().setBackground(Color.black);
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setVisible(true);
         }

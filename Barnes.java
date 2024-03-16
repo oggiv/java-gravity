@@ -89,8 +89,8 @@ public class Barnes {
         Planet[] planets = new Planet[gNumBodies];
 
         // Space size
-        int height = 32; //32;
-        int width = 32; //32;
+        int height = 75; //32;
+        int width = 75; //32;
 
         // Frame size multiplicator
         int wm = 10;

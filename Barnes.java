@@ -350,17 +350,21 @@ public class Barnes {
 
                     //System.out.println("New X for planets[i] " + planets[i].id + " is: " + distanceX);
 
-                    if (newX < 0) {
-                        newX = tree.width - 1;
+                    if (newX < planets[i].size) {
+                        newX = planets[i].size;
+                        planets[i].xVel = -planets[i].xVel;
                     }
-                    else if (tree.width - 1 <= newX) {
-                        newX = 0;
+                    else if (tree.width - 1 - planets[i].size <= newX) {
+                        newX = tree.width - 1 - planets[i].size;
+                        planets[i].xVel = -planets[i].xVel;
                     }
-                    if (newY < 0) {
-                        newY = tree.height - 1;
+                    if (newY < planets[i].size) {
+                        newY = planets[i].size;
+                        planets[i].yVel = -planets[i].yVel;
                     }
-                    else if (tree.height - 1 <= newY) {
-                        newY = 0;
+                    else if (tree.height - 1 - planets[i].size <= newY) {
+                        newY = tree.height - 1 - planets[i].size;
+                        planets[i].yVel = -planets[i].yVel;
                     }
 
                     planets[i].setX(newX);

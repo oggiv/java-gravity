@@ -109,7 +109,8 @@ public class Barnes {
                 String[] row;
                 while ((line = buff.readLine()) != null) {
                     row = line.split(",");
-                    planets[id++] = new Planet(id, Double.parseDouble(row[0]), ((Double.parseDouble(row[0])/Math.pow(10, 11))+1), Double.parseDouble(row[1]), Double.parseDouble(row[2]), Double.parseDouble(row[3]), Double.parseDouble(row[4]));
+                    planets[id] = new Planet(id, Double.parseDouble(row[0]), ((Double.parseDouble(row[0])/Math.pow(10, 11))+1), Double.parseDouble(row[1]), Double.parseDouble(row[2]), Double.parseDouble(row[3]), Double.parseDouble(row[4]));
+                    id++;
                 }
             } catch (FileNotFoundException e) {
                 System.err.println("File " + args[0] + " could not be opened.");

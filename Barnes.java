@@ -130,8 +130,8 @@ public class Barnes {
                     tempMassModifier+1, 
                     rand.nextDouble()*(width - 0.2) + 0.1, 
                     rand.nextDouble()*(height - 0.2) + 0.1, 
-                    rand.nextDouble()*0, 
-                    rand.nextDouble()*0);
+                    rand.nextDouble()*4 - 2, 
+                    rand.nextDouble()*4 - 2);
             }
         }
 

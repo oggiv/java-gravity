@@ -95,109 +95,99 @@ public class Barnes {
         int wm = 10;
         int hm = 10;
 
-        for(int k = 0; k < 5; k++){
-            // Create planets
-            if(readFile) {
-                String file = args.length > 6 ? args[6] : "testPlanets.csv";
+        // Create planets
+        if(readFile) {
+            String file = args.length > 6 ? args[6] : "testPlanets.csv";
 
-                try (BufferedReader buff = new BufferedReader(new FileReader(file))) {
-                    // read the amount of planets
-                    String line;
-                    
-                    // read and create planets
-                    int id = 0;
-                    String[] row;
-                    while ((line = buff.readLine()) != null) {
-                        row = line.split(",");
-                        planets[id++] = new Planet(id, Double.parseDouble(row[0]), ((Double.parseDouble(row[0])/Math.pow(10, 11))+1), Double.parseDouble(row[1]), Double.parseDouble(row[2]), Double.parseDouble(row[3]), Double.parseDouble(row[4]));
-                    }
-                } catch (FileNotFoundException e) {
-                    System.err.println("File " + args[0] + " could not be opened.");
-                    readFile = false;
-                }
-                catch (IOException e) {
-                    System.err.println("IOException.");
-                }
-            }
-
-            if (!readFile) {
-                // Randomize planets
-                double tempMassModifier;
-                for(int i = 0; i < gNumBodies; i++){
-                    tempMassModifier = rand.nextDouble();
-                    planets[i] = new Planet(
-                        i, 
-                        (tempMassModifier*Math.pow(10, 11)), 
-                        tempMassModifier+1, 
-                        rand.nextDouble()*(width - 0.2) + 0.1, 
-                        rand.nextDouble()*(height - 0.2) + 0.1, 
-                        rand.nextDouble()*0, 
-                        rand.nextDouble()*0);
-                }
-            }
-
-            // Graphics
-            Draw draw = new Draw(width*wm+50, height*hm+50, gNumBodies);
-            if(graphics){
-                JFrame frame = new JFrame();
-                draw = new Draw(width*wm+50, height*hm+50, gNumBodies);
-        
-                for(int i = 0; i < gNumBodies; i++){
-                    draw.addCircle(i, planets[i].getX()*wm, planets[i].getY()*hm, 30);
-                }
+            try (BufferedReader buff = new BufferedReader(new FileReader(file))) {
+                // read the amount of planets
+                String line;
                 
-                frame.setSize(width*wm+50, height*hm+50);
-                frame.setTitle("N-Body Problem");
-                frame.add(draw);
-                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                frame.setVisible(true);
-            }
-
-            // Create tree
-            Tree tree = new Tree(height, width);
-            tree.createTree(planets);
-
-            // Create barrier
-            CyclicBarrier barrier = new CyclicBarrier(numWorkers);
-            
-            // Calculate amount of planets per worker
-            int stripSize = (gNumBodies % numWorkers == 0) ? (gNumBodies / numWorkers) : ((gNumBodies / numWorkers) + 1);
-            int start;
-            int end;
-            
-            //long startTime = System.nanoTime();
-            
-            // Create workers
-            Worker[] workers = new Worker[numWorkers];
-            for (int i = 0; i < numWorkers; i++) {
-                start = i * stripSize;
-                end = (i == numWorkers - 1) ? (gNumBodies - 1) : (start + stripSize - 1); // edge case. Giving the last worker extra work if the division is uneven
-                workers[i] = new Worker(i, barrier, tree, planets, start, end, far, numSteps, draw, graphics);
-                workers[i].start();
-            }
-            
-            // Wait for workers to complete their 
-            for (int i = 0; i < numWorkers; i++) {
-                try{
-                    workers[i].join();
-                } catch (InterruptedException ex){
-                    System.out.println("JOIN INTERRUPTED");
-                    return;
+                // read and create planets
+                int id = 0;
+                String[] row;
+                while ((line = buff.readLine()) != null) {
+                    row = line.split(",");
+                    planets[id++] = new Planet(id, Double.parseDouble(row[0]), ((Double.parseDouble(row[0])/Math.pow(10, 11))+1), Double.parseDouble(row[1]), Double.parseDouble(row[2]), Double.parseDouble(row[3]), Double.parseDouble(row[4]));
                 }
+            } catch (FileNotFoundException e) {
+                System.err.println("File " + args[0] + " could not be opened.");
+                readFile = false;
+            }
+            catch (IOException e) {
+                System.err.println("IOException.");
+            }
+        }
+
+        if (!readFile) {
+            // Randomize planets
+            double tempMassModifier;
+            for(int i = 0; i < gNumBodies; i++){
+                tempMassModifier = rand.nextDouble();
+                planets[i] = new Planet(
+                    i, 
+                    (tempMassModifier*Math.pow(10, 11)), 
+                    tempMassModifier+1, 
+                    rand.nextDouble()*(width - 0.2) + 0.1, 
+                    rand.nextDouble()*(height - 0.2) + 0.1, 
+                    rand.nextDouble()*0, 
+                    rand.nextDouble()*0);
+            }
+        }
+
+        // Graphics
+        Draw draw = new Draw(width*wm+50, height*hm+50, gNumBodies);
+        if(graphics){
+            JFrame frame = new JFrame();
+            draw = new Draw(width*wm+50, height*hm+50, gNumBodies);
+    
+            for(int i = 0; i < gNumBodies; i++){
+                draw.addCircle(i, planets[i].getX()*wm, planets[i].getY()*hm, 30);
             }
             
-            // long runTime = System.nanoTime() - startTime;
-            // double secs = Math.round(runTime * Math.pow(10, -6));
-            
-            // System.out.println("Runtime: " + secs + " ms");
+            frame.setSize(width*wm+50, height*hm+50);
+            frame.setTitle("N-Body Problem");
+            frame.add(draw);
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setVisible(true);
+        }
+
+        // Create tree
+        Tree tree = new Tree(height, width);
+        tree.createTree(planets);
+
+        // Create barrier
+        CyclicBarrier barrier = new CyclicBarrier(numWorkers);
+        
+        // Calculate amount of planets per worker
+        int stripSize = (gNumBodies % numWorkers == 0) ? (gNumBodies / numWorkers) : ((gNumBodies / numWorkers) + 1);
+        int start;
+        int end;
+        
+        //long startTime = System.nanoTime();
+        
+        // Create workers
+        Worker[] workers = new Worker[numWorkers];
+        for (int i = 0; i < numWorkers; i++) {
+            start = i * stripSize;
+            end = (i == numWorkers - 1) ? (gNumBodies - 1) : (start + stripSize - 1); // edge case. Giving the last worker extra work if the division is uneven
+            workers[i] = new Worker(i, barrier, tree, planets, start, end, far, numSteps, draw, graphics);
+            workers[i].start();
         }
         
-        /*System.out.println("\nAfter");
-        for (Planet planet : planets) {
-            System.out.println(planet.toString());
-        }*/
-
-        //tree.prettyPrint();
+        // Wait for workers to complete their 
+        for (int i = 0; i < numWorkers; i++) {
+            try{
+                workers[i].join();
+            } catch (InterruptedException ex){
+                System.out.println("JOIN INTERRUPTED");
+                return;
+            }
+        }
+        
+        // long runTime = System.nanoTime() - startTime;
+        // double secs = Math.round(runTime * Math.pow(10, -6));
+        // System.out.println("Runtime: " + secs + " ms");
 
     }
     
